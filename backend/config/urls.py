@@ -17,6 +17,12 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
+from tusome.views import login_user, logout_user, me, register_user
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/auth/register/', register_user, name='register_user'),
+    path('api/auth/login/', login_user, name='login_user'),
+    path('api/auth/me/', me, name='me'),
+    path('api/auth/logout/', logout_user, name='logout_user'),
 ]
