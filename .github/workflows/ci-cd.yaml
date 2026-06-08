@@ -6,10 +6,22 @@ on:
   pull_request:
     branches: [ main ]
 
-jobs:
-  build-and-test:
-    runs-on: ubuntu-latest
+# Cancel an in-progress run if a newer commit is pushed to the same branch/PR.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
+jobs:
+  # ---------------------------------------------------------------------------
+  # FRONTEND: lint, unit tests (TDD), and production build (Vite + React)
+  # Lives in ./Tusome, so every step runs from that directory.
+  # ---------------------------------------------------------------------------
+  frontend:
+    name: Frontend - Lint, Test & Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Tusome
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -19,30 +31,113 @@ jobs:
         with:
           node-version: 20
           cache: 'npm'
+          cache-dependency-path: Tusome/package-lock.json
 
       - name: Install dependencies
         run: npm ci
 
-      # 1. Automated TDD (Unit Tests)
-      - name: Run Unit Tests (TDD)
-        run: npm test -- --watchAll=false
+      - name: Lint
+        run: npm run lint
 
-      # 2. Automated BDD (Cypress/Cucumber)
-      - name: Run E2E Tests (BDD)
-        uses: cypress-io/github-action@v6
-        with:
-          build: npm run build
-          start: npm run preview # Starts your app locally for Cypress to test
-          wait-on: 'http://localhost:4173' # Vite's default preview port
+      # `--if-present` means this passes (skips) until you add a "test" script
+      # to package.json (e.g. Vitest), then it runs automatically.
+      - name: Unit tests (TDD)
+        run: npm test --if-present
 
-      # 3. Build for Production
-      - name: Build Project
+      - name: Build
         run: npm run build
 
-  deploy:
-    needs: build-and-test
-    if: github.ref == 'refs/heads/main'
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: Tusome/dist
+          retention-days: 7
+
+  # ---------------------------------------------------------------------------
+  # BACKEND: Django system checks, migration smoke test, and unit tests.
+  # Lives in ./backend.
+  # ---------------------------------------------------------------------------
+  backend:
+    name: Backend - Django Checks & Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          else
+            pip install "Django>=6.0,<6.1"
+          fi
+
+      - name: Django system checks
+        run: python manage.py check
+
+      - name: Migrations smoke test
+        run: python manage.py migrate --noinput
+
+      - name: Unit tests
+        run: python manage.py test
+
+  # ---------------------------------------------------------------------------
+  # E2E (BDD): build the frontend, serve it, and run Cypress against it.
+  # Requires Cypress specs in Tusome/ — until you add them this job will fail,
+  # so wire up cypress before relying on it as a deploy gate.
+  # ---------------------------------------------------------------------------
+  e2e:
+    name: E2E Tests (BDD)
+    needs: [ frontend, backend ]
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy to Hosting
-        run: echo "Insert your specific deployment command here 
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: Tusome/package-lock.json
+
+      - name: Run Cypress
+        uses: cypress-io/github-action@v6
+        with:
+          working-directory: Tusome
+          build: npm run build
+          start: npm run preview
+          wait-on: 'http://localhost:4173'   # Vite preview default port
+          wait-on-timeout: 120
+
+  # ---------------------------------------------------------------------------
+  # DEPLOY: only on a push to main, and only after everything above is green.
+  # Targets DigitalOcean App Platform via doctl.
+  # ---------------------------------------------------------------------------
+  deploy:
+    name: Deploy to DigitalOcean
+    needs: [ frontend, backend, e2e ]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: Trigger App Platform deployment
+        run: doctl apps create-deployment ${{ secrets.DIGITALOCEAN_APP_ID }} --wait
