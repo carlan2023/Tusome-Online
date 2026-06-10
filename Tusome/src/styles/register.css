@@ -1,0 +1,78 @@
+@import './auth.css';
+
+.tu-auth--register .tu-aside::after {
+  content: '';
+  position: absolute;
+  width: 380px;
+  height: 380px;
+  border-radius: 50%;
+  left: -130px;
+  top: -110px;
+  background: radial-gradient(circle at 60% 60%, rgba(27, 127, 121, 0.45), transparent 70%);
+}
+
+.tu-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+}
+
+.tu-list li {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  color: #dfe7f0;
+  font-size: 15px;
+}
+
+.tu-list b {
+  color: var(--gold);
+  font-family: 'Fraunces', serif;
+}
+
+.tu-auth--register .tu-form .tu-lead {
+  margin-bottom: 26px;
+}
+
+.tu-auth--register .tu-field {
+  margin-bottom: 15px;
+}
+
+.tu-roles {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.tu-roles button {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 11px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+  transition: 0.15s;
+}
+
+.tu-roles button.on {
+  border-color: var(--navy);
+  background: var(--navy);
+  color: #fff;
+}
+
+.tu-auth--register .tu-submit {
+  background: var(--gold);
+  color: var(--ink);
+  font-weight: 700;
+  box-shadow: 0 8px 20px rgba(224, 164, 59, 0.35);
+}
+
+.tu-auth--register .tu-foot {
+  margin-top: 22px;
+}

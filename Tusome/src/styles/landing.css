@@ -1,0 +1,369 @@
+.tu-land {
+  color: var(--ink);
+  background: var(--cream);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.tu-land h1,
+.tu-land h2,
+.tu-land h3 {
+  font-family: 'Fraunces', serif;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+}
+
+.tu-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px 7vw;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: rgba(251, 248, 241, 0.82);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
+}
+
+.tu-land .tu-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  font-size: 21px;
+  color: var(--navy);
+}
+
+.tu-land .tu-mark {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: var(--navy);
+  position: relative;
+  flex: none;
+}
+
+.tu-land .tu-mark::after {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, var(--gold), #b9822a);
+}
+
+.tu-links {
+  display: flex;
+  gap: 30px;
+  align-items: center;
+}
+
+.tu-links a {
+  color: var(--ink);
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+.tu-links a:hover {
+  opacity: 1;
+  color: var(--navy);
+}
+
+.tu-cta {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.tu-btn {
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  padding: 11px 20px;
+  border-radius: 10px;
+  text-decoration: none;
+  display: inline-block;
+  transition: transform 0.15s, box-shadow 0.2s;
+}
+
+.tu-btn:hover {
+  transform: translateY(-1px);
+}
+
+.tu-ghost {
+  background: transparent;
+  color: var(--navy);
+  border: 1px solid var(--navy);
+}
+
+.tu-solid {
+  background: var(--navy);
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(11, 37, 69, 0.25);
+}
+
+.tu-gold {
+  background: var(--gold);
+  color: var(--ink);
+  box-shadow: 0 6px 18px rgba(224, 164, 59, 0.35);
+}
+
+.tu-hero {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 40px;
+  align-items: center;
+  padding: 70px 7vw 60px;
+}
+
+.tu-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--teal);
+  margin-bottom: 22px;
+}
+
+.tu-eyebrow::before {
+  content: '';
+  width: 26px;
+  height: 2px;
+  background: var(--teal);
+}
+
+.tu-hero h1 {
+  font-size: clamp(40px, 5.4vw, 68px);
+  font-weight: 600;
+  color: var(--navy);
+}
+
+.tu-hero h1 em {
+  font-style: italic;
+  color: var(--gold);
+}
+
+.tu-sub {
+  font-size: 18px;
+  line-height: 1.6;
+  color: var(--muted);
+  margin: 24px 0 34px;
+  max-width: 30em;
+}
+
+.tu-actions {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.tu-trust {
+  margin-top: 34px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.tu-dots {
+  display: flex;
+}
+
+.tu-dots span {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid var(--cream);
+  margin-left: -8px;
+  background: var(--navy);
+}
+
+.tu-dots span:nth-child(2) {
+  background: var(--teal);
+}
+
+.tu-dots span:nth-child(3) {
+  background: var(--gold);
+}
+
+.tu-dots span:nth-child(4) {
+  background: #9aa7b4;
+}
+
+.tu-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  padding: 26px;
+  box-shadow: 0 30px 60px -30px rgba(11, 37, 69, 0.4);
+  position: relative;
+}
+
+.tu-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 22px;
+  background: linear-gradient(160deg, rgba(224, 164, 59, 0.12), transparent 60%);
+  pointer-events: none;
+}
+
+.tu-coursehead {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+
+.tu-pill {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--teal);
+  background: rgba(27, 127, 121, 0.1);
+  padding: 5px 11px;
+  border-radius: 999px;
+}
+
+.tu-rating {
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.tu-card h3 {
+  font-size: 21px;
+  color: var(--navy);
+  margin-bottom: 6px;
+}
+
+.tu-card .tu-instr {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 18px;
+}
+
+.tu-prog {
+  height: 8px;
+  background: #eee7d8;
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.tu-prog i {
+  display: block;
+  height: 100%;
+  width: 75%;
+  background: linear-gradient(90deg, var(--gold), #caa044);
+}
+
+.tu-progrow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 8px;
+  font-weight: 600;
+}
+
+.tu-mini {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.tu-mini div {
+  flex: 1;
+  background: var(--cream);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.tu-mini b {
+  font-family: 'Fraunces', serif;
+  font-size: 20px;
+  color: var(--navy);
+  display: block;
+}
+
+.tu-mini small {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.tu-feat {
+  padding: 30px 7vw 80px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+}
+
+.tu-f {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 28px;
+}
+
+.tu-fi {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: var(--navy);
+  display: grid;
+  place-items: center;
+  color: var(--gold);
+  font-family: 'Fraunces', serif;
+  font-size: 22px;
+  margin-bottom: 16px;
+}
+
+.tu-f h3 {
+  font-size: 19px;
+  color: var(--navy);
+  margin-bottom: 8px;
+}
+
+.tu-f p {
+  font-size: 15px;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.tu-foot {
+  background: var(--navy);
+  color: #cfd8e3;
+  padding: 40px 7vw;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  font-size: 14px;
+}
+
+.tu-foot .tu-brand {
+  color: #fff;
+}
+
+@media (max-width: 880px) {
+  .tu-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .tu-links {
+    display: none;
+  }
+
+  .tu-feat {
+    grid-template-columns: 1fr;
+  }
+}

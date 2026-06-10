@@ -1,19 +1,19 @@
-import './App.css'
-import Landing from './pages/Landing'
-import Register from './pages/Register'
+import { Routes, Route } from "react-router-dom";
+import "./App.css";
+import LandingPage from "./pages/LandingPage";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Portal from "./pages/Portal";
 
-function App() {
-  const route = window.location.hash.replace('#', '') || '/'
-
-  let Page = null
-  if (route.startsWith('/register')) Page = Register
-  else Page = Landing
-
+export default function App() {
   return (
-    <div className="app-root">
-      <Page />
-    </div>
-  )
+    <Routes>
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/dashboard" element={<Portal role="student" />} />
+      <Route path="/consultant" element={<Portal role="consultant" />} />
+      <Route path="/admin" element={<Portal role="admin" />} />
+    </Routes>
+  );
 }
-
-export default App
