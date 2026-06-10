@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { clearAuth, getStoredUser, PORTAL_LABELS, PORTAL_ROUTES } from "../config/api";
-import "../styles/portal.css";
 
 export default function Portal({ role }) {
   const navigate = useNavigate();

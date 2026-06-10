@@ -1,20 +1,29 @@
-import './footer.css'
+import logo from '../assets/logo.jpeg'
 
 function Footer() {
   return (
     <footer className="footer" id="contact">
       <div className="footer-main">
         <div className="footer-brand">
-          <a className="brand-mark" href="#">
+          <a className="brand-mark" href="#top">
+            <img className="brand-logo" src={logo} alt="" />
             <span>Tusome Online</span>
           </a>
-          <p>Empowering learners globally through high-quality, accessible, and affordable online education.</p>
+          <p>
+            Empowering learners globally through high-quality, accessible,
+            and affordable online education.
+          </p>
+          <div className="social-links" aria-label="Social media">
+            <a href="#twitter" aria-label="Twitter / X">𝕏</a>
+            <a href="#linkedin" aria-label="LinkedIn">in</a>
+            <a href="#youtube" aria-label="YouTube">▶</a>
+          </div>
         </div>
         <div className="footer-group">
           <h3>Quick Links</h3>
           <a href="#courses">Courses Catalog</a>
           <a href="#features">About Us</a>
-          <a href="#instructor">Instructors</a>
+          <a href="#how">How it Works</a>
           <a href="#pricing">Pricing Plans</a>
         </div>
         <div className="footer-group">
@@ -22,15 +31,15 @@ function Footer() {
           <a href="mailto:hello@tusome.online">Help Center</a>
           <a href="#contact">Contact Support</a>
           <a href="#privacy">Privacy Policy</a>
-          <a href="#privacy">Terms of Service</a>
+          <a href="#terms">Terms of Service</a>
         </div>
         <div className="footer-group">
           <h3>Stay Updated</h3>
           <p>Subscribe to our newsletter for new course alerts.</p>
           <label className="newsletter-form">
-            <input type="email" placeholder="Email address" />
+            <input type="email" placeholder="Email address" aria-label="Email address" />
             <button type="button" aria-label="Subscribe">
-              &gt;
+              →
             </button>
           </label>
         </div>
@@ -39,7 +48,7 @@ function Footer() {
         <p>&copy; 2026 Tusome Online Education Platform. All rights reserved.</p>
         <div>
           <a href="#privacy">Privacy Policy</a>
-          <a href="#language">Language: English (US)</a>
+          <a href="#language">English (US)</a>
         </div>
       </div>
     </footer>
