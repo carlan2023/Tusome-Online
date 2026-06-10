@@ -1,4 +1,7 @@
 import cartIcon from '../assets/cart.svg'
+import logo from '../assets/logo.jpeg'
+import Footer from './footer'
+import './landingpage.css'
 
 const courses = [
   {
@@ -39,19 +42,22 @@ function LandingPage() {
       <section className="page-sheet">
         <header className="site-header">
           <a className="brand-mark" href="#">
-            <span className="brand-icon" aria-hidden="true" />
+            <img className="brand-logo" src={logo} alt="" />
             <span>Tusome Online</span>
           </a>
           <nav className="top-nav" aria-label="Primary navigation">
-            <a href="#courses">Courses</a>
-            <a href="#features">Features</a>
+            <label className="header-search">
+              <span aria-hidden="true">⌕</span>
+              <input type="search" placeholder="Search Courses" aria-label="Search courses" />
+            </label>
+            <a href="#features">Teach with Tosome Online</a>
             <a href="#testimonials">Testimonials</a>
           </nav>
           <div className="header-actions">
             <a className="login-link" href="#start">
               Log In
             </a>
-            <a className="header-link" href="#start">
+            <a className="header-link" href="#register">
               Sign Up
             </a>
           </div>
@@ -90,10 +96,51 @@ anywhere, anytime. High-quality accessible learning at your fingertips.
 
         <section className="why-section" id="features">
           <div className="why-heading">
-            <h2>Why Choose Tusome?</h2>
+            <h2>Explore Courses That Move Your Future Forward</h2>
             <p>
-              We provide the tools and environment necessary for students to excel
-              in their professional journeys.
+              Learn practical, career-ready skills through expert-led programs,
+              hands-on projects, and flexible online lessons.
+            </p>
+          </div>
+
+          <section className="courses-section" id="courses">
+            <div className="section-heading">
+              <div>
+                <span>Popular Courses</span>
+                <p>Start your journey with our most-enrolled specializations.</p>
+              </div>
+              <a href="#courses">Explore all courses ›</a>
+            </div>
+            <div className="course-grid">
+              {courses.map((course) => (
+                <article className="course-card" key={course.title}>
+                  <div className="course-image">
+                    <img src={course.image} alt="" />
+                    <span>{course.tag}</span>
+                  </div>
+                  <div className="course-content">
+                    <p className="course-rating">
+                      <strong>★ {course.rating}</strong> ({course.reviews})
+                    </p>
+                    <h3>{course.title}</h3>
+                    <p>{course.description}</p>
+                    <div className="course-footer">
+                      <strong>{course.price}</strong>
+                      <button type="button" aria-label={`Add ${course.title} to cart`}>
+                        <img src={cartIcon} alt="" />
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <div className="why-heading why-heading-secondary">
+            <h2>Why Learners Choose Tusome</h2>
+            <p>
+              Everything you need to stay supported, motivated, and confident
+              as you build real skills for your next opportunity.
             </p>
           </div>
 
@@ -145,39 +192,6 @@ anywhere, anytime. High-quality accessible learning at your fingertips.
           </div>
         </section>
 
-        <section className="courses-section" id="courses">
-          <div className="section-heading">
-            <div>
-              <span>Popular Courses</span>
-              <p>Start your journey with our most-enrolled specializations.</p>
-            </div>
-            <a href="#courses">Explore all courses ›</a>
-          </div>
-          <div className="course-grid">
-            {courses.map((course) => (
-              <article className="course-card" key={course.title}>
-                <div className="course-image">
-                  <img src={course.image} alt="" />
-                  <span>{course.tag}</span>
-                </div>
-                <div className="course-content">
-                  <p className="course-rating">
-                    <strong>★ {course.rating}</strong> ({course.reviews})
-                  </p>
-                  <h3>{course.title}</h3>
-                  <p>{course.description}</p>
-                  <div className="course-footer">
-                    <strong>{course.price}</strong>
-                    <button type="button" aria-label={`Add ${course.title} to cart`}>
-                      <img src={cartIcon} alt="" />
-                    </button>
-                  </div>
-                </div>
-              </article>
-            ))}
-          </div>
-        </section>
-
         <section className="steps-band">
           <h2>How Tusome Online Works</h2>
           <div className="steps">
@@ -210,48 +224,7 @@ anywhere, anytime. High-quality accessible learning at your fingertips.
           </div>
         </section>
 
-        <footer className="footer" id="contact">
-          <div className="footer-main">
-            <div className="footer-brand">
-              <a className="brand-mark" href="#">
-                <span className="brand-icon" aria-hidden="true" />
-                <span>Tusome Online</span>
-              </a>
-              <p>Empowering learners globally through high-quality, accessible, and affordable online education.</p>
-              
-            </div>
-            <div className="footer-group">
-              <h3>Quick Links</h3>
-              <a href="#courses">Courses Catalog</a>
-              <a href="#features">About Us</a>
-              <a href="#instructor">Instructors</a>
-              <a href="#pricing">Pricing Plans</a>
-            </div>
-            <div className="footer-group">
-              <h3>Support</h3>
-              <a href="mailto:hello@tusome.online">Help Center</a>
-              <a href="#contact">Contact Support</a>
-              <a href="#privacy">Privacy Policy</a>
-              <a href="#privacy">Terms of Service</a>
-            </div>
-            <div className="footer-group">
-              <h3>Stay Updated</h3>
-              <p>Subscribe to our newsletter for new course alerts.</p>
-              <label className="newsletter-form">
-                <input type="email" placeholder="Email address" />
-                <button type="button" aria-label="Subscribe">▷</button>
-              </label>
-            </div>
-          </div>
-          <div className="footer-bottom">
-            <p>© 2026 Tusome Online Education Platform. All rights reserved.</p>
-            <div>
-              <a href="#privacy">Privacy Policy</a>
-              <a href="#sitemap">Sitemap</a>
-              <a href="#language">Language: English (US)</a>
-            </div>
-          </div>
-        </footer>
+        <Footer />
       </section>
     </main>
   )
