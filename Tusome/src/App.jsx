@@ -1,17 +1,39 @@
+import { useEffect, useState } from 'react'
 import './App.css'
-import Landing from './pages/Landing'
-import Register from './pages/Register'
+import DashboardPage from './Pages/dashboard'
+import LandingPage from './Pages/landingpage'
+import RegisterPage from './Pages/register'
+
+function getCurrentPage() {
+  if (window.location.hash === '#register') {
+    return 'register'
+  }
+
+  if (window.location.hash === '#dashboard') {
+    return 'dashboard'
+  }
+
+  return 'landing'
+}
 
 function App() {
-  const route = window.location.hash.replace('#', '') || '/'
+  const [page, setPage] = useState(getCurrentPage)
 
-  let Page = null
-  if (route.startsWith('/register')) Page = Register
-  else Page = Landing
+  useEffect(() => {
+    function handleHashChange() {
+      setPage(getCurrentPage())
+      window.scrollTo(0, 0)
+    }
+
+    window.addEventListener('hashchange', handleHashChange)
+    return () => window.removeEventListener('hashchange', handleHashChange)
+  }, [])
 
   return (
     <div className="app-root">
-      <Page />
+      {page === 'dashboard' && <DashboardPage />}
+      {page === 'register' && <RegisterPage />}
+      {page === 'landing' && <LandingPage />}
     </div>
   )
 }
