@@ -1,5 +1,52 @@
+<<<<<<< HEAD
 /* App shell — page-specific styles live in src/styles/ */
 
 #root {
+=======
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
+
+:root {
+  --teal: #078171;
+  --teal-dark: #006655;
+  --teal-soft: #dff4ef;
+  --orange: #ffb000;
+  --ink: #17312d;
+  --muted: #6c7c79;
+  --line: #dce8e5;
+  --paper: #ffffff;
+  --wash: #f5faf9;
+  --blue-wash: #eaf4ff;
+  --cream: #fff7e6;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: #eef4fb;
+  color: var(--ink);
+  font-family:
+    "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+.app-root {
+>>>>>>> refs/remotes/origin/main
   min-height: 100vh;
 }
