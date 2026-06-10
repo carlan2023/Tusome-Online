@@ -8,12 +8,14 @@ class RegisterView(generics.CreateAPIView):
     """POST /api/auth/register/  — open sign-up for students & consultants."""
     serializer_class = RegisterSerializer
     permission_classes = [permissions.AllowAny]
+    throttle_scope = "register"
 
 
 class LoginView(TokenObtainPairView):
     """POST /api/auth/login/  — returns {access, refresh, user}."""
     serializer_class = LoginSerializer
     permission_classes = [permissions.AllowAny]
+    throttle_scope = "auth"
 
 
 class MeView(generics.RetrieveUpdateAPIView):

@@ -13,18 +13,24 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 env = environ.Env(
     DEBUG=(bool, False),
     ALLOWED_HOSTS=(list, ["localhost", "127.0.0.1"]),
-    CORS_ALLOWED_ORIGINS=(list, ["http://localhost:5173"]),
+    CORS_ALLOWED_ORIGINS=(list, ["http://localhost:5173", "http://127.0.0.1:5173"]),
+    CSRF_TRUSTED_ORIGINS=(list, []),
     USE_SPACES=(bool, False),
 )
 
 environ.Env.read_env(BASE_DIR / ".env")
 
-SECRET_KEY = os.environ.get("SECRET_KEY", env("SECRET_KEY"))
-    
-
 DEBUG = env("DEBUG")
+
+# In production SECRET_KEY must come from the environment; the insecure
+# fallback only exists so local dev works without a .env file.
+SECRET_KEY = env("SECRET_KEY", default="dev-only-insecure-key" if DEBUG else None)
+if not SECRET_KEY:
+    raise RuntimeError("SECRET_KEY environment variable is required when DEBUG=False.")
+
 ALLOWED_HOSTS = env("ALLOWED_HOSTS")
 CORS_ALLOWED_ORIGINS = env("CORS_ALLOWED_ORIGINS")
+CSRF_TRUSTED_ORIGINS = env("CSRF_TRUSTED_ORIGINS")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -41,6 +47,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -71,12 +78,15 @@ WSGI_APPLICATION = "config.wsgi.application"
 
 AUTH_USER_MODEL = "accounts.User"
 
+# SQLite by default for development; set DATABASE_URL in production, e.g.
+#   DATABASE_URL=postgres://USER:PASSWORD@HOST:5432/tusome
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
+    "default": env.db("DATABASE_URL", default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}"),
 }
+if not DEBUG and DATABASES["default"]["ENGINE"].endswith("sqlite3"):
+    raise RuntimeError("Set DATABASE_URL to a PostgreSQL database in production.")
+if DATABASES["default"]["ENGINE"].endswith("postgresql"):
+    DATABASES["default"]["CONN_MAX_AGE"] = 60
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
@@ -89,11 +99,20 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.ScopedRateThrottle",
+    ],
+    "DEFAULT_THROTTLE_RATES": {
+        # Brute-force protection on the public auth endpoints.
+        "auth": "10/min",
+        "register": "5/min",
+    },
 }
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ROTATE_REFRESH_TOKENS": True,
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
 
@@ -103,6 +122,21 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = "static/"
-STATICFILES_DIRS = [BASE_DIR / "static"]
+STATICFILES_DIRS = [BASE_DIR / "static"] if (BASE_DIR / "static").exists() else []
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
+}
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# --- Production hardening (active when DEBUG=False) ---
+if not DEBUG:
+    SECURE_SSL_REDIRECT = env.bool("SECURE_SSL_REDIRECT", default=True)
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 60 * 60 * 24 * 30  # 30 days; raise once stable
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = "DENY"

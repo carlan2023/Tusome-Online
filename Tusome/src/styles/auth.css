@@ -1,6 +1,11 @@
-/* Shared auth layout (login + register) */
+/* Shared auth layout (login + register) — teal brand theme */
 
 .tu-auth {
+  --auth-primary: #078171;
+  --auth-primary-dark: #006655;
+  --auth-accent: #ffb000;
+  --auth-wash: #f5faf9;
+
   color: var(--ink);
   min-height: 100vh;
   display: grid;
@@ -14,7 +19,7 @@
 }
 
 .tu-aside {
-  background: var(--navy);
+  background: linear-gradient(160deg, var(--auth-primary) 0%, var(--auth-primary-dark) 100%);
   color: #fff;
   padding: 54px 5vw;
   display: flex;
@@ -47,7 +52,7 @@
   position: absolute;
   inset: 7px;
   border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, var(--gold), #b9822a);
+  background: radial-gradient(circle at 30% 30%, var(--auth-accent), #d18f00);
 }
 
 .tu-aside h2 {
@@ -59,7 +64,7 @@
 }
 
 .tu-aside p {
-  color: #aebdcf;
+  color: rgba(255, 255, 255, 0.82);
   line-height: 1.6;
   max-width: 26em;
 }
@@ -69,7 +74,7 @@
   align-items: center;
   justify-content: center;
   padding: 40px 6vw;
-  background: var(--cream);
+  background: var(--auth-wash);
 }
 
 .tu-form {
@@ -79,7 +84,7 @@
 
 .tu-form h1 {
   font-size: 30px;
-  color: var(--navy);
+  color: var(--auth-primary-dark);
   font-weight: 600;
   margin-bottom: 6px;
 }
@@ -116,8 +121,8 @@
 .tu-field input:focus,
 .tu-field select:focus {
   outline: none;
-  border-color: var(--navy);
-  box-shadow: 0 0 0 3px rgba(11, 37, 69, 0.1);
+  border-color: var(--auth-primary);
+  box-shadow: 0 0 0 3px rgba(7, 129, 113, 0.14);
 }
 
 .tu-submit {
@@ -168,9 +173,13 @@
 }
 
 .tu-foot a {
-  color: var(--navy);
+  color: var(--auth-primary);
   font-weight: 600;
   text-decoration: none;
+}
+
+.tu-foot a:hover {
+  text-decoration: underline;
 }
 
 @media (max-width: 860px) {

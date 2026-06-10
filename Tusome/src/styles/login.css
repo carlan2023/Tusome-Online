@@ -8,13 +8,13 @@
   border-radius: 50%;
   right: -120px;
   bottom: -120px;
-  background: radial-gradient(circle at 30% 30%, rgba(224, 164, 59, 0.5), transparent 70%);
+  background: radial-gradient(circle at 30% 30%, rgba(255, 176, 0, 0.4), transparent 70%);
 }
 
 .tu-quote {
-  border-left: 3px solid var(--gold);
+  border-left: 3px solid var(--auth-accent);
   padding-left: 16px;
-  color: #dfe7f0;
+  color: rgba(255, 255, 255, 0.85);
   font-size: 15px;
   line-height: 1.6;
   max-width: 28em;
@@ -46,7 +46,11 @@
 }
 
 .tu-auth--login .tu-submit {
-  background: var(--navy);
+  background: var(--auth-primary);
   color: #fff;
-  box-shadow: 0 8px 20px rgba(11, 37, 69, 0.25);
+  box-shadow: 0 8px 20px rgba(7, 129, 113, 0.25);
+}
+
+.tu-auth--login .tu-submit:hover:not(:disabled) {
+  background: var(--auth-primary-dark);
 }

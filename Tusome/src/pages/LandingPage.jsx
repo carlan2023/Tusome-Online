@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import cartIcon from '../assets/cart.svg'
 import logo from '../assets/logo.jpeg'
 import Footer from './footer'
@@ -41,10 +42,10 @@ function LandingPage() {
     <main className="landing-page">
       <section className="page-sheet">
         <header className="site-header">
-          <a className="brand-mark" href="#">
+          <Link className="brand-mark" to="/">
             <img className="brand-logo" src={logo} alt="" />
             <span>Tusome Online</span>
-          </a>
+          </Link>
           <nav className="top-nav" aria-label="Primary navigation">
             <label className="header-search">
               <span aria-hidden="true">⌕</span>
@@ -54,12 +55,12 @@ function LandingPage() {
             <a href="#testimonials">Testimonials</a>
           </nav>
           <div className="header-actions">
-            <a className="login-link" href="#start">
+            <Link className="login-link" to="/login">
               Log In
-            </a>
-            <a className="header-link" href="#register">
+            </Link>
+            <Link className="header-link" to="/register">
               Sign Up
-            </a>
+            </Link>
           </div>
         </header>
 
@@ -75,9 +76,9 @@ function LandingPage() {
 anywhere, anytime. High-quality accessible learning at your fingertips.
             </p>
             <div className="hero-actions">
-              <a className="btn primary" href="#start">
+              <Link className="btn primary" to="/register">
                 Get Started
-              </a>
+              </Link>
               <a className="btn secondary" href="#courses">
                 Browse Courses
               </a>
@@ -217,10 +218,10 @@ anywhere, anytime. High-quality accessible learning at your fingertips.
           <h2>Ready to start your journey?</h2>
           <p>Join thousands of students who are already shaping their future with Tusome Online.</p>
           <div className="cta-form">
-            <a className="btn primary" href="mailto:hello@tusome.online">
+            <Link className="btn primary" to="/register">
               Get Started Free
-            </a>
-            <input type="email" placeholder="Contact " aria-label="Parent email address" />
+            </Link>
+            <input type="email" placeholder="Enter your email address" aria-label="Email address" />
           </div>
         </section>
 

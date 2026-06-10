@@ -1,8 +1,5 @@
-<<<<<<< HEAD
-/* App shell — page-specific styles live in src/styles/ */
-
-#root {
-=======
+/* Landing/dashboard/register design tokens (from origin/main).
+   Auth/portal tokens live in index.css; page-specific styles in src/styles/. */
 @import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
 
 :root {
@@ -10,30 +7,14 @@
   --teal-dark: #006655;
   --teal-soft: #dff4ef;
   --orange: #ffb000;
-  --ink: #17312d;
   --muted: #6c7c79;
-  --line: #dce8e5;
   --paper: #ffffff;
   --wash: #f5faf9;
   --blue-wash: #eaf4ff;
-  --cream: #fff7e6;
-}
-
-* {
-  box-sizing: border-box;
 }
 
 html {
   scroll-behavior: smooth;
-}
-
-body {
-  margin: 0;
-  background: #eef4fb;
-  color: var(--ink);
-  font-family:
-    "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
 }
 
 a {
@@ -41,12 +22,7 @@ a {
   text-decoration: none;
 }
 
-button,
-input {
-  font: inherit;
-}
-
+#root,
 .app-root {
->>>>>>> refs/remotes/origin/main
   min-height: 100vh;
 }
