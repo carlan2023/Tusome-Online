@@ -52,6 +52,17 @@ export default function Portal({ role }) {
           <p><strong>Email:</strong> {user.email}</p>
           <p><strong>Role:</strong> {user.role}</p>
         </div>
+        {role === "consultant" && verifyStatus && (
+          <div className="tu-portal-card tu-portal-verify">
+            <p>
+              <strong>Identity verification:</strong>{" "}
+              {VERIFY_COPY[verifyStatus]?.label || verifyStatus}
+            </p>
+            <Link className="tu-portal-home" to="/consultant/verify">
+              {VERIFY_COPY[verifyStatus]?.cta || "View"} →
+            </Link>
+          </div>
+        )}
         <Link className="tu-portal-home" to="/">← Back to home</Link>
       </main>
     </div>

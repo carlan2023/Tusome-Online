@@ -1666,6 +1666,553 @@ a:focus-visible {
   margin-top: 20px;
 }
 
+/* ---------- 15. Admin dashboard ---------- */
+.ad-shell {
+  background: var(--wash);
+  display: grid;
+  grid-template-columns: 230px minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.ad-sidebar {
+  background: var(--teal-deep);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 28px 20px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.ad-brand {
+  color: white;
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.ad-brand-sub {
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  margin-bottom: 28px;
+  text-transform: uppercase;
+}
+
+.ad-nav {
+  display: grid;
+  gap: 4px;
+}
+
+.ad-nav a {
+  border-radius: 10px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.94rem;
+  font-weight: 600;
+  padding: 11px 14px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.ad-nav a:hover,
+.ad-nav a.is-active {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.ad-logout {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+  color: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+  font-weight: 600;
+  margin-top: auto;
+  padding: 10px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.ad-logout:hover {
+  background: var(--orange);
+  border-color: var(--orange);
+  color: #221a04;
+}
+
+.ad-main {
+  padding: clamp(24px, 3.5vw, 44px);
+}
+
+.ad-header h1 {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(1.5rem, 2.4vw, 2rem);
+  font-weight: 600;
+  margin: 0 0 4px;
+}
+
+.ad-header p {
+  color: var(--slate);
+  margin: 0 0 26px;
+}
+
+.ad-error {
+  background: var(--error-bg);
+  border: 1px solid var(--error-border);
+  border-radius: 10px;
+  color: var(--error-text);
+  margin-bottom: 20px;
+  padding: 12px 14px;
+}
+
+.ad-stats {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-bottom: 24px;
+}
+
+.ad-stat {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 20px 22px;
+}
+
+.ad-stat span {
+  color: var(--slate);
+  display: block;
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+
+.ad-stat strong {
+  color: var(--ink);
+  display: block;
+  font-family: 'Fraunces', serif;
+  font-size: 1.9rem;
+  font-weight: 600;
+  margin-top: 6px;
+}
+
+.ad-stat small {
+  color: var(--teal);
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  margin-top: 4px;
+  min-height: 1em;
+}
+
+.ad-stat--accent {
+  background: var(--teal-soft);
+  border-color: #c4e6df;
+}
+
+.ad-panel {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  margin-bottom: 24px;
+  padding: 22px 24px;
+}
+
+.ad-panel-head {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.ad-panel-head h2 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.ad-badge {
+  background: #fce8e6;
+  border-radius: 999px;
+  color: #9b1c13;
+  font-size: 0.76rem;
+  font-weight: 700;
+  padding: 5px 12px;
+}
+
+.ad-muted {
+  color: var(--slate);
+  font-size: 0.85rem;
+}
+
+.ad-empty {
+  color: var(--slate);
+  margin: 6px 0;
+}
+
+.ad-approvals {
+  display: grid;
+  gap: 12px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ad-approvals li {
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 14px 16px;
+}
+
+.ad-applicant {
+  display: grid;
+  gap: 2px;
+}
+
+.ad-applicant span {
+  color: var(--slate);
+  font-size: 0.86rem;
+}
+
+.ad-docs a {
+  color: var(--teal);
+  font-weight: 600;
+}
+
+.ad-docs a:hover {
+  text-decoration: underline;
+}
+
+.ad-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.ad-approve,
+.ad-reject {
+  border: 0;
+  border-radius: 9px;
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 700;
+  padding: 9px 18px;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.ad-approve {
+  background: var(--teal);
+  color: white;
+}
+
+.ad-reject {
+  background: #fce8e6;
+  color: #9b1c13;
+}
+
+.ad-approve:hover:not(:disabled),
+.ad-reject:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.ad-approve:disabled,
+.ad-reject:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.ad-table-wrap {
+  overflow-x: auto;
+}
+
+.ad-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.ad-table th {
+  color: var(--slate);
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  padding: 10px 12px;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.ad-table td {
+  border-top: 1px solid var(--line);
+  font-size: 0.92rem;
+  padding: 12px;
+}
+
+.ad-role {
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  text-transform: capitalize;
+}
+
+.ad-role--student {
+  background: var(--blue-wash);
+  color: #2b6cb0;
+}
+
+.ad-role--consultant {
+  background: var(--teal-soft);
+  color: var(--teal-dark);
+}
+
+.ad-role--admin {
+  background: var(--cream);
+  color: #9c6a00;
+}
+
+/* ---------- 16. Consultant verification ---------- */
+.cv-page {
+  background: var(--wash);
+  min-height: 100vh;
+  padding-bottom: 60px;
+}
+
+.cv-header {
+  align-items: center;
+  background: white;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  gap: 14px;
+  justify-content: space-between;
+  min-height: 56px;
+  padding: 0 clamp(20px, 4vw, 48px);
+}
+
+.cv-step {
+  color: var(--slate);
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+
+.cv-card {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  margin: clamp(24px, 4vw, 48px) auto 0;
+  max-width: 860px;
+  padding: clamp(26px, 4vw, 44px);
+  width: calc(100% - 40px);
+}
+
+.cv-intro {
+  margin-bottom: 26px;
+  text-align: center;
+}
+
+.cv-intro h1 {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(1.5rem, 2.6vw, 2rem);
+  font-weight: 600;
+  margin: 0 0 10px;
+}
+
+.cv-intro p {
+  color: var(--slate);
+  margin: 0 auto;
+  max-width: 34em;
+}
+
+.cv-grid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.cv-block {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 20px;
+}
+
+.cv-block--wide {
+  grid-column: 1 / -1;
+}
+
+.cv-block h2 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0 0 6px;
+}
+
+.cv-block > p {
+  color: var(--slate);
+  font-size: 0.88rem;
+  margin: 0 0 14px;
+}
+
+.cv-upload {
+  align-items: center;
+  background: var(--wash);
+  border: 1.5px dashed #b9d2cb;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  font-size: 0.92rem;
+  font-weight: 600;
+  gap: 10px;
+  justify-content: center;
+  min-height: 64px;
+  padding: 12px;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.cv-upload:hover {
+  background: var(--teal-soft);
+  border-color: var(--teal);
+}
+
+.cv-upload input {
+  display: none;
+}
+
+.cv-upload span {
+  color: var(--teal-dark);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cv-fields {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.cv-fields label {
+  display: grid;
+  font-size: 0.86rem;
+  font-weight: 700;
+  gap: 7px;
+}
+
+.cv-fields input {
+  border: 1px solid #d5dbe3;
+  border-radius: 9px;
+  font-size: 0.95rem;
+  min-height: 44px;
+  outline: 0;
+  padding: 0 14px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.cv-fields input:focus {
+  border-color: var(--teal);
+  box-shadow: 0 0 0 3px rgba(7, 129, 113, 0.14);
+}
+
+.cv-footer {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: space-between;
+  margin-top: 24px;
+}
+
+.cv-note {
+  color: var(--slate);
+  font-size: 0.82rem;
+  margin: 0;
+  max-width: 30em;
+}
+
+.cv-submit {
+  width: auto;
+  padding: 0 30px;
+}
+
+.cv-done {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  margin: clamp(40px, 8vw, 90px) auto 0;
+  max-width: 560px;
+  padding: clamp(32px, 5vw, 52px);
+  text-align: center;
+  width: calc(100% - 40px);
+}
+
+.cv-done-icon {
+  align-items: center;
+  border-radius: 50%;
+  display: inline-flex;
+  font-size: 1.6rem;
+  height: 64px;
+  justify-content: center;
+  margin-bottom: 18px;
+  width: 64px;
+}
+
+.cv-done-icon--pending,
+.cv-done-icon--approved {
+  background: var(--teal-soft);
+  color: var(--teal-dark);
+}
+
+.cv-done-icon--rejected {
+  background: var(--error-bg);
+  color: var(--error-text);
+}
+
+.cv-done h1 {
+  font-family: 'Fraunces', serif;
+  font-size: 1.6rem;
+  font-weight: 600;
+  margin: 0 0 10px;
+}
+
+.cv-done > p {
+  color: var(--slate);
+  margin: 0 0 24px;
+}
+
+.cv-done-meta {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 1fr 1fr;
+  margin-bottom: 26px;
+}
+
+.cv-done-meta > div {
+  background: var(--wash);
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.cv-done-meta span {
+  color: var(--slate);
+  display: block;
+  font-size: 0.78rem;
+  margin-bottom: 4px;
+}
+
+.cv-status--pending {
+  color: #9c6a00;
+}
+
+.cv-status--approved {
+  color: var(--teal-dark);
+}
+
+.cv-status--rejected {
+  color: var(--error-text);
+}
+
+.tu-portal-verify {
+  margin-top: 16px;
+}
+
 /* ---------- 14. Responsive ---------- */
 @media (max-width: 1080px) {
   .course-grid {
@@ -1814,5 +2361,57 @@ a:focus-visible {
     flex-wrap: wrap;
     gap: 10px;
     padding: 12px 18px;
+  }
+}
+
+@media (max-width: 920px) {
+  .ad-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .ad-sidebar {
+    flex-direction: row;
+    align-items: center;
+    height: auto;
+    position: static;
+    padding: 14px 20px;
+  }
+
+  .ad-brand-sub {
+    display: none;
+  }
+
+  .ad-nav {
+    display: flex;
+    gap: 6px;
+    margin-left: auto;
+  }
+
+  .ad-logout {
+    margin: 0 0 0 10px;
+  }
+
+  .ad-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .cv-grid,
+  .cv-fields {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .ad-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .ad-approvals li {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .cv-done-meta {
+    grid-template-columns: 1fr;
   }
 }

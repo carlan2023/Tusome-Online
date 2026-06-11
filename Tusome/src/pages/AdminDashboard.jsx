@@ -12,7 +12,6 @@ export default function AdminDashboard() {
   const [busyId, setBusyId] = useState(null);
 
   const loadData = useCallback(async () => {
-    setError("");
     try {
       const [statsRes, usersRes, appsRes] = await Promise.all([
         authFetch("/admin/stats/"),
@@ -26,6 +25,7 @@ export default function AdminDashboard() {
       setStats(await statsRes.json());
       setUsers(await usersRes.json());
       setApplications(await appsRes.json());
+      setError("");
     } catch {
       setError("Could not reach the server. Please try again.");
     }
@@ -36,6 +36,8 @@ export default function AdminDashboard() {
       navigate("/login", { replace: true });
       return;
     }
+    // Data fetch on mount: state updates happen after awaits, not synchronously.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadData();
   }, [user, navigate, loadData]);
 
