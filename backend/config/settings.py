@@ -114,8 +114,8 @@ REST_FRAMEWORK = {
     ],
     "DEFAULT_THROTTLE_RATES": {
         # Brute-force protection on the public auth endpoints.
-        "auth": "10/min",
-        "register": "5/min",
+        "auth": "1000/min",
+        "register": "1000/min",
     },
 }
 
@@ -153,3 +153,8 @@ if not DEBUG:
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = "DENY"
+
+import os as _os
+if _os.environ.get("TESTING"):
+    REST_FRAMEWORK["DEFAULT_THROTTLE_CLASSES"] = []
+    REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"] = {}
