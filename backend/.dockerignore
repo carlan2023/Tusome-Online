@@ -1,0 +1,30 @@
+.git
+.gitignore
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.py[cod]
+
+# Environments
+env/
+venv/
+.venv/
+.env
+
+# Databases
+db.sqlite3
+db.sqlite3-journal
+
+# Static and Media Files (We collect static during build)
+staticfiles/
+media/
+
+# Logs
+*.log
+
+# Docker
+docker-compose.yml
+Dockerfile
