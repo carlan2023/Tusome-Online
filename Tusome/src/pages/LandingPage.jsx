@@ -2,7 +2,6 @@ import { Link } from 'react-router-dom'
 import cartIcon from '../assets/cart.svg'
 import logo from '../assets/logo.jpeg'
 import Footer from './footer'
-import './landingpage.css'
 
 const courses = [
   {
@@ -40,7 +39,7 @@ const courses = [
 function LandingPage() {
   return (
     <main className="landing-page">
-      <section className="page-sheet">
+      <div className="page-sheet">
         <header className="site-header">
           <Link className="brand-mark" to="/">
             <img className="brand-logo" src={logo} alt="" />
@@ -49,10 +48,11 @@ function LandingPage() {
           <nav className="top-nav" aria-label="Primary navigation">
             <label className="header-search">
               <span aria-hidden="true">⌕</span>
-              <input type="search" placeholder="Search Courses" aria-label="Search courses" />
+              <input type="search" placeholder="Search courses" aria-label="Search courses" />
             </label>
-            <a href="#features">Teach with Tosome Online</a>
-            <a href="#testimonials">Testimonials</a>
+            <a href="#courses">Courses</a>
+            <a href="#features">Why Tusome</a>
+            <a href="#how">How it Works</a>
           </nav>
           <div className="header-actions">
             <Link className="login-link" to="/login">
@@ -70,14 +70,14 @@ function LandingPage() {
               <span className="eyebrow-dot" />
               Trusted by 50,000+ students worldwide
             </span>
-            <h1>Empower Your Future with Tusome Online.</h1>
+            <h1>Empower your future with Tusome Online.</h1>
             <p>
               Unlock your potential with expert-led courses designed for everyone,
-anywhere, anytime. High-quality accessible learning at your fingertips.
+              anywhere, anytime. High-quality accessible learning at your fingertips.
             </p>
             <div className="hero-actions">
               <Link className="btn primary" to="/register">
-                Get Started
+                Get Started <span aria-hidden="true">→</span>
               </Link>
               <a className="btn secondary" href="#courses">
                 Browse Courses
@@ -95,20 +95,41 @@ anywhere, anytime. High-quality accessible learning at your fingertips.
           </div>
         </section>
 
-        <section className="why-section" id="features">
-          <div className="why-heading">
-            <h2>Explore Courses That Move Your Future Forward</h2>
-            <p>
-              Learn practical, career-ready skills through expert-led programs,
-              hands-on projects, and flexible online lessons.
-            </p>
+        <section className="stats-band" aria-label="Tusome in numbers">
+          <div className="stats">
+            <div className="stat">
+              <strong>50k+</strong>
+              <span>Active learners</span>
+            </div>
+            <div className="stat">
+              <strong>200+</strong>
+              <span>Expert-led courses</span>
+            </div>
+            <div className="stat">
+              <strong>4.9</strong>
+              <span>Average course rating</span>
+            </div>
+            <div className="stat">
+              <strong>95%</strong>
+              <span>Completion success</span>
+            </div>
           </div>
+        </section>
 
-          <section className="courses-section" id="courses">
+        <section className="courses-section" id="courses">
+          <div className="section">
+            <div className="section-head">
+              <span className="kicker">Popular Courses</span>
+              <h2>Explore courses that move your future forward</h2>
+              <p>
+                Learn practical, career-ready skills through expert-led programs,
+                hands-on projects, and flexible online lessons.
+              </p>
+            </div>
             <div className="section-heading">
               <div>
-                <span>Popular Courses</span>
-                <p>Start your journey with our most-enrolled specializations.</p>
+                <span>Most-enrolled specializations</span>
+                <p>Start your journey with our highest-rated programs.</p>
               </div>
               <a href="#courses">Explore all courses ›</a>
             </div>
@@ -116,7 +137,7 @@ anywhere, anytime. High-quality accessible learning at your fingertips.
               {courses.map((course) => (
                 <article className="course-card" key={course.title}>
                   <div className="course-image">
-                    <img src={course.image} alt="" />
+                    <img src={course.image} alt="" loading="lazy" />
                     <span>{course.tag}</span>
                   </div>
                   <div className="course-content">
@@ -135,100 +156,103 @@ anywhere, anytime. High-quality accessible learning at your fingertips.
                 </article>
               ))}
             </div>
-          </section>
-
-          <div className="why-heading why-heading-secondary">
-            <h2>Why Learners Choose Tusome</h2>
-            <p>
-              Everything you need to stay supported, motivated, and confident
-              as you build real skills for your next opportunity.
-            </p>
           </div>
+        </section>
 
-          <div className="why-grid">
-            <article className="why-card expert-card">
-              <span className="why-icon line-icon">☟</span>
-              <div>
+        <section id="features">
+          <div className="section">
+            <div className="section-head">
+              <span className="kicker">Why Tusome</span>
+              <h2>Everything you need to learn with confidence</h2>
+              <p>
+                Stay supported, motivated, and confident as you build real skills
+                for your next opportunity.
+              </p>
+            </div>
+            <div className="why-grid">
+              <article className="why-card">
+                <span className="why-icon chip-blue" aria-hidden="true">✦</span>
                 <h3>Expert Instructors</h3>
                 <p>
                   Learn from industry leaders and academic scholars who bring
-                  real-world experience directly to your digital classroom.
+                  real-world experience to your classroom.
                 </p>
-              </div>
-              <span className="award-mark">★</span>
-            </article>
+              </article>
 
-            <article className="why-card flexible-card">
-              <span className="why-icon clock-icon">○</span>
-              <div>
+              <article className="why-card">
+                <span className="why-icon chip-orange" aria-hidden="true">◷</span>
                 <h3>Flexible Learning</h3>
                 <p>
                   Study at your own pace, on any device, and balance your
                   education with your personal life.
                 </p>
-              </div>
-            </article>
+              </article>
 
-            <article className="why-card certificate-card">
-              <span className="why-icon cert-icon">▣</span>
-              <div>
+              <article className="why-card">
+                <span className="why-icon chip-teal" aria-hidden="true">▣</span>
                 <h3>Recognized Certificates</h3>
                 <p>
-                  Earn credentials that are valued by top employers and recognized
-                  across the industry.
+                  Earn credentials that are valued by top employers and
+                  recognized across the industry.
                 </p>
-              </div>
-            </article>
+              </article>
 
-            <article className="why-card community-card">
-              <span className="community-icon">👥</span>
-              <div>
+              <article className="why-card">
+                <span className="why-icon chip-violet" aria-hidden="true">⚭</span>
                 <h3>Global Community</h3>
                 <p>
-                  Join a network of thousands of learners. Collaborate on projects,
-                  participate in forums, and grow your network globally.
+                  Join thousands of learners. Collaborate on projects, join
+                  forums, and grow your network globally.
                 </p>
-              </div>
-            </article>
+              </article>
+            </div>
           </div>
         </section>
 
-        <section className="steps-band">
-          <h2>How Tusome Online Works</h2>
-          <div className="steps">
-            <article>
-              <span>01</span>
-              <h3>Create Account</h3>
-              <p>Sign up in seconds and choose your learning path based on your goals.</p>
-            </article>
-            <article>
-              <span>02</span>
-              <h3>Start Learning</h3>
-              <p>Access your dashboard, pick a course, and start your first lesson immediately.</p>
-            </article>
-            <article>
-              <span>03</span>
-              <h3>Get Certified</h3>
-              <p>Complete your modules and projects to earn your industry- recognized certification.</p>
-            </article>
+        <section className="steps-band" id="how">
+          <div className="section">
+            <div className="section-head">
+              <span className="kicker">How it works</span>
+              <h2>Start learning in three simple steps</h2>
+            </div>
+            <div className="steps">
+              <article>
+                <span>01</span>
+                <h3>Create Account</h3>
+                <p>Sign up in seconds and choose your learning path based on your goals.</p>
+              </article>
+              <article>
+                <span>02</span>
+                <h3>Start Learning</h3>
+                <p>Access your dashboard, pick a course, and start your first lesson immediately.</p>
+              </article>
+              <article>
+                <span>03</span>
+                <h3>Get Certified</h3>
+                <p>Complete your modules and projects to earn your industry-recognized certification.</p>
+              </article>
+            </div>
           </div>
         </section>
 
-        <section className="cta-panel" id="start">
-          <h2>Ready to start your journey?</h2>
-          <p>Join thousands of students who are already shaping their future with Tusome Online.</p>
-          <div className="cta-form">
-            <Link className="btn primary" to="/register">
-              Get Started Free
-            </Link>
-            <input type="email" placeholder="Enter your email address" aria-label="Email address" />
-          </div>
-        </section>
+        <div className="cta-wrap" id="start">
+          <section className="cta-panel">
+            <h2>Ready to start your journey?</h2>
+            <p>Join thousands of students who are already shaping their future with Tusome Online.</p>
+            <div className="cta-form">
+              <input type="email" placeholder="Enter your email address" aria-label="Email address" />
+              <Link className="btn primary" to="/register">
+                Get Started Free <span aria-hidden="true">→</span>
+              </Link>
+            </div>
+          </section>
+        </div>
 
         <Footer />
-      </section>
+      </div>
     </main>
   )
 }
 
 export default LandingPage
+

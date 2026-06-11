@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { API_BASE, PORTAL_ROUTES } from '../config/api'
 import Footer from './footer'
-import './register.css'
 
 function RegisterPage() {
   const navigate = useNavigate()
@@ -13,41 +12,50 @@ function RegisterPage() {
   const [agreed, setAgreed] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  // { fullName, email, password, terms, general }
+  const [errors, setErrors] = useState({})
 
-  function firstError(data) {
-    if (!data) return 'Something went wrong. Please try again.'
-    if (typeof data.detail === 'string') return data.detail
-    const key = Object.keys(data)[0]
-    const val = Array.isArray(data[key]) ? data[key][0] : data[key]
-    return typeof val === 'string' ? val : 'Please check your details and try again.'
+  function fieldClass(key) {
+    return errors[key] ? 'has-error' : ''
+  }
+
+  function mapServerErrors(data) {
+    const next = {}
+    if (data?.full_name) next.fullName = [].concat(data.full_name)[0]
+    if (data?.email) next.email = [].concat(data.email)[0]
+    if (data?.password) next.password = [].concat(data.password)[0]
+    if (!Object.keys(next).length) {
+      next.general =
+        typeof data?.detail === 'string'
+          ? data.detail
+          : 'Something went wrong. Please check your details and try again.'
+    }
+    return next
   }
 
   async function handleSubmit(e) {
     e.preventDefault()
-    setError('')
-    if (!fullName || !email || !password) {
-      setError('Please fill in your name, email, and password.')
+    const next = {}
+    if (!fullName.trim()) next.fullName = 'Please enter your full name.'
+    if (!email) next.email = 'Please enter your email address.'
+    if (!password) next.password = 'Please enter a password.'
+    else if (password.length < 8) next.password = 'Password must be at least 8 characters.'
+    if (!agreed) next.terms = 'Please agree to the Terms of Service and Privacy Policy.'
+    if (Object.keys(next).length) {
+      setErrors(next)
       return
     }
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters.')
-      return
-    }
-    if (!agreed) {
-      setError('Please agree to the Terms of Service and Privacy Policy.')
-      return
-    }
+    setErrors({})
     setLoading(true)
     try {
       const res = await fetch(`${API_BASE}/auth/register/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ full_name: fullName, email, password, role }),
+        body: JSON.stringify({ full_name: fullName.trim(), email, password, role }),
       })
       const data = await res.json()
       if (!res.ok) {
-        setError(firstError(data))
+        setErrors(mapServerErrors(data))
         return
       }
 
@@ -68,7 +76,7 @@ function RegisterPage() {
       const userRole = loginData.user?.role || 'student'
       navigate(PORTAL_ROUTES[userRole] || '/dashboard')
     } catch {
-      setError('Could not reach the server. Please try again.')
+      setErrors({ general: 'Could not reach the server. Please try again.' })
     } finally {
       setLoading(false)
     }
@@ -115,9 +123,9 @@ function RegisterPage() {
               </p>
             </div>
 
-            {error && (
+            {errors.general && (
               <div className="register-error" role="alert">
-                {error}
+                {errors.general}
               </div>
             )}
 
@@ -126,10 +134,13 @@ function RegisterPage() {
               <input
                 type="text"
                 autoComplete="name"
+                className={fieldClass('fullName')}
+                aria-invalid={Boolean(errors.fullName)}
                 placeholder="Enter your full name"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
               />
+              {errors.fullName && <span className="field-msg" role="alert">{errors.fullName}</span>}
             </label>
 
             <label>
@@ -137,10 +148,13 @@ function RegisterPage() {
               <input
                 type="email"
                 autoComplete="email"
+                className={fieldClass('email')}
+                aria-invalid={Boolean(errors.email)}
                 placeholder="example@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
+              {errors.email && <span className="field-msg" role="alert">{errors.email}</span>}
             </label>
 
             <label>
@@ -149,6 +163,8 @@ function RegisterPage() {
                 <input
                   type={showPassword ? 'text' : 'password'}
                   autoComplete="new-password"
+                  className={fieldClass('password')}
+                  aria-invalid={Boolean(errors.password)}
                   placeholder="At least 8 characters"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -161,6 +177,7 @@ function RegisterPage() {
                   ◎
                 </button>
               </span>
+              {errors.password && <span className="field-msg" role="alert">{errors.password}</span>}
             </label>
 
             <label>
@@ -171,16 +188,18 @@ function RegisterPage() {
               </select>
             </label>
 
-            <label className="terms-row">
+            <label className={`terms-row${errors.terms ? ' terms-row--error' : ''}`}>
               <input
                 type="checkbox"
                 checked={agreed}
+                aria-invalid={Boolean(errors.terms)}
                 onChange={(e) => setAgreed(e.target.checked)}
               />
               <span>
                 I agree to the <a href="#terms">Terms of Service</a> and <a href="#privacy">Privacy Policy</a>.
               </span>
             </label>
+            {errors.terms && <span className="field-msg" role="alert">{errors.terms}</span>}
 
             <button className="submit-button" type="submit" disabled={loading}>
               {loading ? 'Creating account…' : 'Create Account'}

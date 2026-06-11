@@ -83,8 +83,18 @@ AUTH_USER_MODEL = "accounts.User"
 DATABASES = {
     "default": env.db("DATABASE_URL", default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}"),
 }
+if not DATABASES["default"].get("ENGINE"):
+    # DATABASE_URL was set but empty/unparseable — fall back to SQLite so the
+    # error (raised below in production) is clear instead of a KeyError.
+    DATABASES["default"] = {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
+    }
 if not DEBUG and DATABASES["default"]["ENGINE"].endswith("sqlite3"):
-    raise RuntimeError("Set DATABASE_URL to a PostgreSQL database in production.")
+    raise RuntimeError(
+        "DATABASE_URL is missing or empty. Set it to your PostgreSQL connection "
+        "string (e.g. from Neon) in the backend's environment variables."
+    )
 if DATABASES["default"]["ENGINE"].endswith("postgresql"):
     DATABASES["default"]["CONN_MAX_AGE"] = 60
 

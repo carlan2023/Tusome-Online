@@ -1,22 +1,28 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { API_BASE, PORTAL_ROUTES } from "../config/api";
-import "../styles/login.css";
 
 export default function Login() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  // { email, password, credentials, general }
+  const [errors, setErrors] = useState({});
+
+  const emailInvalid = Boolean(errors.email || errors.credentials);
+  const passwordInvalid = Boolean(errors.password || errors.credentials);
 
   async function handleSubmit(e) {
     e.preventDefault();
-    setError("");
-    if (!email || !password) {
-      setError("Please enter your email and password.");
+    const next = {};
+    if (!email) next.email = "Please enter your email address.";
+    if (!password) next.password = "Please enter your password.";
+    if (Object.keys(next).length) {
+      setErrors(next);
       return;
     }
+    setErrors({});
     setLoading(true);
     try {
       const res = await fetch(`${API_BASE}/auth/login/`, {
@@ -26,7 +32,7 @@ export default function Login() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.detail || "Invalid email or password.");
+        setErrors({ credentials: data.detail || "Incorrect email or password." });
         return;
       }
       localStorage.setItem("tu_access", data.access);
@@ -35,7 +41,7 @@ export default function Login() {
       const role = data.user?.role || "student";
       navigate(PORTAL_ROUTES[role] || "/dashboard");
     } catch {
-      setError("Could not reach the server. Please try again.");
+      setErrors({ general: "Could not reach the server. Please try again." });
     } finally {
       setLoading(false);
     }
@@ -44,7 +50,7 @@ export default function Login() {
   return (
     <div className="tu-auth tu-auth--login">
       <aside className="tu-aside">
-        <div className="tu-brand"><span className="tu-mark" />Tusome Online</div>
+        <Link className="tu-brand" to="/"><span className="tu-mark" />Tusome Online</Link>
         <div>
           <h2>Welcome back to your learning journey.</h2>
           <p>Pick up where you left off — your classes, live sessions, and progress are waiting.</p>
@@ -55,33 +61,41 @@ export default function Login() {
       </aside>
 
       <main className="tu-panel">
-        <form className="tu-form" onSubmit={handleSubmit}>
+        <form className="tu-form" onSubmit={handleSubmit} noValidate>
           <h1>Log in</h1>
           <p className="tu-lead">Please enter your details to access your portal.</p>
 
-          {error && <div className="tu-err">{error}</div>}
+          {errors.general && <div className="tu-err" role="alert">{errors.general}</div>}
 
-          <div className="tu-field">
+          <div className={`tu-field${emailInvalid ? " tu-field--error" : ""}`}>
             <label htmlFor="email">Email Address</label>
             <input
               id="email"
               type="email"
               autoComplete="email"
+              aria-invalid={emailInvalid}
               placeholder="e.g. student@tusome.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
+            {errors.email && <p className="tu-field-msg" role="alert">{errors.email}</p>}
           </div>
-          <div className="tu-field">
+          <div className={`tu-field${passwordInvalid ? " tu-field--error" : ""}`}>
             <label htmlFor="password">Password</label>
             <input
               id="password"
               type="password"
               autoComplete="current-password"
+              aria-invalid={passwordInvalid}
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
+            {(errors.password || errors.credentials) && (
+              <p className="tu-field-msg" role="alert">
+                {errors.password || errors.credentials}
+              </p>
+            )}
           </div>
 
           <div className="tu-row">
