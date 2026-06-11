@@ -112,9 +112,6 @@ jobs:
     needs: [ frontend, backend ]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: Tusome
     env:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -136,6 +133,7 @@ jobs:
 
       - name: Deploy to Vercel
         if: steps.creds.outputs.configured == 'true'
+        working-directory: Tusome
         run: |
           npm i -g vercel
           vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
