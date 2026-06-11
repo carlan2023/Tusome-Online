@@ -20,11 +20,11 @@ env = environ.Env(
 
 environ.Env.read_env(BASE_DIR / ".env")
 
-DEBUG = env("DEBUG")
+DEBUG = env.bool('DEBUG', default=False)
 
 # In production SECRET_KEY must come from the environment; the insecure
 # fallback only exists so local dev works without a .env file.
-SECRET_KEY = env("SECRET_KEY", default="dev-only-insecure-key" if DEBUG else None)
+SECRET_KEY = env("SECRET_KEY", default="w95TZZpY0F5Uaj8KNRaWMsZyIfMBxJGqmBaGLSKtPb8=" if DEBUG else None)
 if not SECRET_KEY:
     raise RuntimeError("SECRET_KEY environment variable is required when DEBUG=False.")
 
@@ -154,6 +154,7 @@ FRONTEND_URL = env("FRONTEND_URL", default="http://localhost:5173").rstrip("/")
 STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"] if (BASE_DIR / "static").exists() else []
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+STATIC_FILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
     "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
