@@ -1,11 +1,19 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { clearAuth, getStoredUser, PORTAL_LABELS, PORTAL_ROUTES } from "../config/api";
+import { authFetch, clearAuth, getStoredUser, PORTAL_LABELS, PORTAL_ROUTES } from "../config/api";
+
+const VERIFY_COPY = {
+  none: { label: "Not started", cta: "Start verification" },
+  pending: { label: "Under review", cta: "View status" },
+  approved: { label: "Verified ✓", cta: "View status" },
+  rejected: { label: "Not approved", cta: "View details" },
+};
 
 export default function Portal({ role }) {
   const navigate = useNavigate();
   // Lazy initializer: read once on mount, no setState-in-effect needed.
   const [user] = useState(getStoredUser);
+  const [verifyStatus, setVerifyStatus] = useState(null);
   const wrongPortal = user?.email && user.role !== role;
 
   useEffect(() => {
@@ -13,6 +21,11 @@ export default function Portal({ role }) {
       navigate("/login", { replace: true });
     } else if (user.role !== role) {
       navigate(PORTAL_ROUTES[user.role] || "/dashboard", { replace: true });
+    } else if (role === "consultant") {
+      authFetch("/consultant/application/")
+        .then((res) => (res.ok ? res.json() : { status: "none" }))
+        .then((data) => setVerifyStatus(data.status || "none"))
+        .catch(() => setVerifyStatus("none"));
     }
   }, [user, role, navigate]);
 
