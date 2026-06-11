@@ -95,43 +95,79 @@ jobs:
         run: python manage.py test --verbosity=2
 
   # ---------------------------------------------------------------------------
-  # DEPLOY: CI-gated — runs only on pushes to main AND only after both test
-  # jobs pass. Requires two GitHub repo secrets:
-  #   DIGITALOCEAN_ACCESS_TOKEN  (DO API token with App write scope)
-  #   DIGITALOCEAN_APP_ID        (from doctl apps list, or the app's URL)
-  # Until those secrets exist the job skips gracefully and stays green.
-  # IMPORTANT: turn OFF Autodeploy in the DO app once secrets are set,
-  # otherwise every push deploys twice.
+  # DEPLOYS: CI-gated — run only on pushes to main, only after BOTH test jobs
+  # pass. Frontend → Vercel, backend → Railway. Each job skips gracefully
+  # (stays green) until its secrets are added:
+  #   Vercel:  VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID
+  #   Railway: RAILWAY_TOKEN, RAILWAY_SERVICE  (service name or ID)
+  # IMPORTANT: disable the Vercel/Railway GitHub auto-deploy integrations once
+  # these secrets are set, otherwise every push deploys twice.
   #
   # E2E (Cypress/Playwright) intentionally omitted until specs exist — an empty
   # E2E job would fail every push. Behaviour coverage currently lives in the
   # Vitest specs (frontend) and the Django scenario tests (backend).
   # ---------------------------------------------------------------------------
-  deploy:
-    name: Deploy to DigitalOcean
+  deploy-frontend:
+    name: Deploy Frontend to Vercel
     needs: [ frontend, backend ]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Tusome
     env:
-      DO_TOKEN: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
-      DO_APP_ID: ${{ secrets.DIGITALOCEAN_APP_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
     steps:
-      - name: Check deploy credentials
+      - name: Check Vercel credentials
         id: creds
         run: |
-          if [ -z "$DO_TOKEN" ] || [ -z "$DO_APP_ID" ]; then
+          if [ -z "$VERCEL_TOKEN" ] || [ -z "$VERCEL_ORG_ID" ] || [ -z "$VERCEL_PROJECT_ID" ]; then
             echo "configured=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::Deploy skipped — set DIGITALOCEAN_ACCESS_TOKEN and DIGITALOCEAN_APP_ID repo secrets to enable CI-gated deploys."
+            echo "::notice::Vercel deploy skipped — add VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID repo secrets to enable."
           else
             echo "configured=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Install doctl
+      - name: Checkout code
         if: steps.creds.outputs.configured == 'true'
-        uses: digitalocean/action-doctl@v2
-        with:
-          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+        uses: actions/checkout@v4
 
-      - name: Trigger App Platform deployment
+      - name: Deploy to Vercel
         if: steps.creds.outputs.configured == 'true'
-        run: doctl apps create-deployment "$DO_APP_ID" --wait
+        run: |
+          npm i -g vercel
+          vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+          vercel build --prod --token="$VERCEL_TOKEN"
+          vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"
+
+  deploy-backend:
+    name: Deploy Backend to Railway
+    needs: [ frontend, backend ]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    env:
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      RAILWAY_SERVICE: ${{ secrets.RAILWAY_SERVICE }}
+    steps:
+      - name: Check Railway credentials
+        id: creds
+        run: |
+          if [ -z "$RAILWAY_TOKEN" ] || [ -z "$RAILWAY_SERVICE" ]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Railway deploy skipped — add RAILWAY_TOKEN and RAILWAY_SERVICE repo secrets to enable."
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout code
+        if: steps.creds.outputs.configured == 'true'
+        uses: actions/checkout@v4
+
+      - name: Deploy to Railway
+        if: steps.creds.outputs.configured == 'true'
+        working-directory: backend
+        run: |
+          npm i -g @railway/cli
+          railway up --service "$RAILWAY_SERVICE" --detach

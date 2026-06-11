@@ -1,112 +1,79 @@
-import { createContext, useContext, useState, useEffect } from 'react';
-import { authAPI } from '../services/api';
+import { createContext, useState } from 'react';
+import { authAPI } from '../api/axios';
 
 const AuthContext = createContext(null);
+export { AuthContext };
 
-export function AuthProvider({ children }) {
-    const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true);
+function readStoredUser() {
+    try {
+        const raw = localStorage.getItem('tu_user');
+        return raw && localStorage.getItem('tu_access') ? JSON.parse(raw) : null;
+    } catch {
+        return null;
+    }
+}
 
-    // Check if user is already logged in on page load
-    useEffect(() => {
-        const savedUser = localStorage.getItem('user');
-        const token = localStorage.getItem('access_token');
-
-        if (savedUser && token) {
-            setUser(JSON.parse(savedUser));
-        }
-        setLoading(false);
-    }, []);
+export default function AuthProvider({ children }) {
+    // Lazy initializer reads localStorage once — no setState-in-effect needed.
+    const [user, setUser] = useState(readStoredUser);
 
     // ── Login ──────────────────────────────────────────────────
-    const login = async (email, password) => {
+    const login = async (identifier, password) => {
         try {
-            const response = await authAPI.login({ email, password });
-            const { user, tokens } = response.data;
+            const response = await authAPI.login({ identifier, password });
+            const { access, refresh, user: loggedIn } = response.data;
 
-            // Save to localStorage
-            localStorage.setItem('access_token', tokens.access);
-            localStorage.setItem('refresh_token', tokens.refresh);
-            localStorage.setItem('user', JSON.stringify(user));
+            localStorage.setItem('tu_access', access);
+            localStorage.setItem('tu_refresh', refresh);
+            localStorage.setItem('tu_user', JSON.stringify(loggedIn || {}));
 
-            setUser(user);
-
-            return { success: true, user };
+            setUser(loggedIn);
+            return { success: true, user: loggedIn };
         } catch (error) {
-            const message = error.response?.data?.message
+            const message = error.response?.data?.detail
                 || 'Login failed. Please try again.';
             return { success: false, message };
         }
     };
 
-    // ── Register ───────────────────────────────────────────────
+    // ── Register (then auto-login) ─────────────────────────────
     const register = async (userData) => {
         try {
-            const response = await authAPI.register(userData);
-            const { user, tokens } = response.data;
-
-            // Save to localStorage
-            localStorage.setItem('access_token', tokens.access);
-            localStorage.setItem('refresh_token', tokens.refresh);
-            localStorage.setItem('user', JSON.stringify(user));
-
-            setUser(user);
-
-            return { success: true, user };
+            await authAPI.register(userData);
+            return login(userData.email || userData.phone, userData.password);
         } catch (error) {
-            const message = error.response?.data?.message
-                || 'Registration failed. Please try again.';
-            const errors = error.response?.data?.errors || {};
+            const errors = error.response?.data || {};
+            const message = errors.detail || 'Registration failed. Please try again.';
             return { success: false, message, errors };
         }
     };
 
-    // ── Logout ─────────────────────────────────────────────────
-    const logout = async () => {
-        try {
-            const refresh = localStorage.getItem('refresh_token');
-            await authAPI.logout(refresh);
-        } catch (error) {
-            console.log('Logout error:', error);
-        } finally {
-            localStorage.removeItem('access_token');
-            localStorage.removeItem('refresh_token');
-            localStorage.removeItem('user');
-            setUser(null);
-        }
+    // ── Logout (client-side: discard tokens) ───────────────────
+    const logout = () => {
+        localStorage.removeItem('tu_access');
+        localStorage.removeItem('tu_refresh');
+        localStorage.removeItem('tu_user');
+        setUser(null);
     };
 
-    // ── Check if user is authenticated ─────────────────────────
-    const isAuthenticated = () => {
-        return !!user && !!localStorage.getItem('access_token');
-    };
-
-    // ── Check user role ─────────────────────────────────────────
-    const isLearner = () => user?.role === 'learner';
+    // ── Helpers ────────────────────────────────────────────────
+    const isAuthenticated = () => !!user && !!localStorage.getItem('tu_access');
+    const isStudent = () => user?.role === 'student';
     const isConsultant = () => user?.role === 'consultant';
     const isAdmin = () => user?.role === 'admin';
 
     return (
         <AuthContext.Provider value={{
             user,
-            loading,
             login,
             register,
             logout,
             isAuthenticated,
-            isLearner,
+            isStudent,
             isConsultant,
             isAdmin,
         }}>
-            {!loading && children}
+            {children}
         </AuthContext.Provider>
     );
-}
-
-export function useAuth() {
-    const context = useContext(AuthContext);
-    if (!context) {
-        throw new Error('useAuth must be used inside AuthProvider');
-    }
-    return context;
 }

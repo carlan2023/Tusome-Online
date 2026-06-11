@@ -1,7 +1,9 @@
 import axios from 'axios';
 
 // ── Base URL ───────────────────────────────────────────────────
-const BASE_URL = 'http://127.0.0.1:8000/api';
+// Same source of truth as config/api.js: VITE_API_URL in production,
+// local Django in development.
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api';
 
 // ── Create axios instance ──────────────────────────────────────
 const api = axios.create({
@@ -12,10 +14,10 @@ const api = axios.create({
 });
 
 // ── Request interceptor ────────────────────────────────────────
-// Automatically adds JWT token to every request
+// Automatically adds the JWT token to every request.
 api.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem('access_token');
+        const token = localStorage.getItem('tu_access');
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
@@ -25,7 +27,7 @@ api.interceptors.request.use(
 );
 
 // ── Response interceptor ───────────────────────────────────────
-// Handles expired tokens automatically
+// Refreshes an expired access token once, then retries the request.
 api.interceptors.response.use(
     (response) => response,
     async (error) => {
@@ -35,22 +37,22 @@ api.interceptors.response.use(
             originalRequest._retry = true;
 
             try {
-                const refresh = localStorage.getItem('refresh_token');
+                const refresh = localStorage.getItem('tu_refresh');
                 const response = await axios.post(
-                    `${BASE_URL}/auth/token/refresh/`,
+                    `${BASE_URL}/auth/refresh/`,
                     { refresh }
                 );
 
                 const { access } = response.data;
-                localStorage.setItem('access_token', access);
+                localStorage.setItem('tu_access', access);
                 originalRequest.headers.Authorization = `Bearer ${access}`;
 
                 return api(originalRequest);
-            } catch (err) {
-                // Refresh token expired — log user out
-                localStorage.removeItem('access_token');
-                localStorage.removeItem('refresh_token');
-                localStorage.removeItem('user');
+            } catch {
+                // Refresh token expired — log the user out.
+                localStorage.removeItem('tu_access');
+                localStorage.removeItem('tu_refresh');
+                localStorage.removeItem('tu_user');
                 window.location.href = '/login';
             }
         }
@@ -59,36 +61,28 @@ api.interceptors.response.use(
     }
 );
 
-// ── Auth API calls ─────────────────────────────────────────────
+// ── Auth API calls (matched to backend/accounts/urls.py) ──────
 export const authAPI = {
+    // Register new user (email or phone + password)
+    register: (userData) => api.post('/auth/register/', userData),
 
-    // Landing page data
-    getLanding: () =>
-        api.get('/auth/landing/'),
+    // Login with { identifier, password } → { access, refresh, user }
+    login: (credentials) => api.post('/auth/login/', credentials),
 
-    // Register new user
-    register: (userData) =>
-        api.post('/auth/register/', userData),
+    // Current user profile
+    getProfile: () => api.get('/auth/me/'),
 
-    // Login
-    login: (credentials) =>
-        api.post('/auth/login/', credentials),
+    // Update own profile (full_name, phone)
+    updateProfile: (data) => api.patch('/auth/me/', data),
 
-    // Logout
-    logout: (refreshToken) =>
-        api.post('/auth/logout/', { refresh_token: refreshToken }),
+    // Account verification
+    verifyEmail: (token) => api.post('/auth/verify/email/', { token }),
+    verifyOtp: (code) => api.post('/auth/verify/otp/', { code }),
+    resendVerification: (channel) => api.post('/auth/verify/resend/', { channel }),
 
-    // Get current user profile
-    getProfile: () =>
-        api.get('/auth/profile/'),
-
-    // Update profile
-    updateProfile: (data) =>
-        api.put('/auth/profile/', data),
-
-    // Change password
-    changePassword: (data) =>
-        api.post('/auth/change-password/', data),
+    // Password recovery
+    forgotPassword: (identifier) => api.post('/auth/password/forgot/', { identifier }),
+    resetPassword: (payload) => api.post('/auth/password/reset/', payload),
 };
 
 export default api;
