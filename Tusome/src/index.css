@@ -365,8 +365,8 @@ a:focus-visible {
 .hero-photo {
   background:
     linear-gradient(100deg, rgba(0, 77, 62, 0.35) 0%, rgba(0, 77, 62, 0) 45%),
-    url('./assets/image4.jpg');
-  background-position: center;
+    url('./assets/welcome.jpg');
+  background-position: center 25%;
   background-size: cover;
   border-radius: 28px 0 0 28px;
   box-shadow: -18px 0 44px rgba(0, 40, 32, 0.25);
@@ -537,6 +537,37 @@ a:focus-visible {
   text-decoration: underline;
 }
 
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 32px;
+}
+
+.filter-chip {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--slate);
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 9px 20px;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.filter-chip:hover {
+  border-color: var(--teal);
+  color: var(--teal-dark);
+}
+
+.filter-chip.is-active {
+  background: var(--teal);
+  border-color: var(--teal);
+  color: white;
+}
+
 .course-grid {
   display: grid;
   gap: 24px;
@@ -661,38 +692,72 @@ a:focus-visible {
   width: 20px;
 }
 
-/* ---------- 7. Why grid (uniform cards) ---------- */
-.why-grid {
+/* ---------- 7. Why section (split feature, no cards) ---------- */
+.feature-split {
+  align-items: center;
   display: grid;
-  gap: 20px;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(28px, 5vw, 64px);
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
 }
 
-.why-card {
-  background: white;
-  border: 1px solid var(--line);
-  border-radius: 18px;
-  padding: 30px 26px;
-  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
-}
-
-.why-card:hover {
-  border-color: transparent;
+.feature-media img {
+  border-radius: 24px;
   box-shadow: var(--shadow-md);
-  transform: translateY(-4px);
+  display: block;
+  height: 100%;
+  max-height: 560px;
+  object-fit: cover;
+  width: 100%;
 }
 
-.why-card h3 {
+.feature-copy .kicker {
+  color: var(--teal);
+  display: block;
+  font-size: 0.84rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+}
+
+.feature-copy h2 {
   color: var(--ink);
-  font-size: 1.1rem;
-  font-weight: 700;
-  margin: 0 0 10px;
+  font-family: 'Fraunces', serif;
+  font-size: clamp(1.7rem, 2.7vw, 2.4rem);
+  font-weight: 600;
+  line-height: 1.12;
+  margin: 0 0 26px;
 }
 
-.why-card p {
+.feature-list {
+  display: grid;
+  gap: 22px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.feature-list li {
+  display: flex;
+  gap: 16px;
+}
+
+.feature-list .why-icon {
+  flex: none;
+  margin-bottom: 0;
+}
+
+.feature-list h3 {
+  color: var(--ink);
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 2px 0 4px;
+}
+
+.feature-list p {
   color: var(--slate);
-  font-size: 0.94rem;
-  line-height: 1.65;
+  font-size: 0.95rem;
+  line-height: 1.6;
   margin: 0;
 }
 
@@ -727,34 +792,31 @@ a:focus-visible {
   color: #6b46c1;
 }
 
-/* ---------- 8. Steps (timeline) ---------- */
+/* ---------- 8. Steps (open timeline, no cards) ---------- */
 .steps-band {
   background: var(--wash);
 }
 
 .steps {
   display: grid;
-  gap: 26px;
+  gap: clamp(24px, 4vw, 56px);
   grid-template-columns: repeat(3, minmax(0, 1fr));
   margin-top: 8px;
 }
 
 .steps article {
-  background: white;
-  border: 1px solid var(--line);
-  border-radius: 18px;
-  padding: 36px 28px;
+  padding: 8px 12px;
   position: relative;
   text-align: center;
 }
 
 .steps article:not(:last-child)::after {
-  border-top: 2px dashed #c2dad3;
+  border-top: 2px dashed #b5d4cb;
   content: '';
   position: absolute;
-  right: -28px;
-  top: 64px;
-  width: 30px;
+  right: calc(-1 * clamp(24px, 4vw, 56px));
+  top: 36px;
+  width: clamp(24px, 4vw, 56px);
 }
 
 .steps span {
@@ -788,6 +850,149 @@ a:focus-visible {
   font-size: 0.94rem;
   line-height: 1.65;
   margin: 0;
+}
+
+/* ---------- 8b. Testimonials (interactive slider) ---------- */
+.testimonials {
+  background: white;
+}
+
+.quote-card {
+  background: var(--teal-soft);
+  border-radius: 24px;
+  margin: 0 auto;
+  max-width: 720px;
+  padding: clamp(32px, 5vw, 52px);
+  text-align: center;
+}
+
+.quote-photo {
+  border: 4px solid white;
+  border-radius: 50%;
+  box-shadow: var(--shadow-sm);
+  height: 84px;
+  object-fit: cover;
+  width: 84px;
+}
+
+.quote-card blockquote {
+  color: #1d3a34;
+  font-family: 'Fraunces', serif;
+  font-size: clamp(1.05rem, 1.6vw, 1.3rem);
+  font-weight: 500;
+  line-height: 1.6;
+  margin: 20px 0;
+}
+
+.quote-card figcaption strong {
+  display: block;
+  font-size: 1rem;
+}
+
+.quote-card figcaption span {
+  color: #3c5a55;
+  font-size: 0.86rem;
+}
+
+.quote-nav {
+  align-items: center;
+  display: flex;
+  gap: 18px;
+  justify-content: center;
+  margin-top: 24px;
+}
+
+.quote-nav button {
+  align-items: center;
+  background: white;
+  border: 1px solid #c4e6df;
+  border-radius: 50%;
+  color: var(--teal-dark);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 1rem;
+  height: 40px;
+  justify-content: center;
+  transition: background 0.15s ease, transform 0.15s ease;
+  width: 40px;
+}
+
+.quote-nav button:hover {
+  background: var(--orange);
+  transform: translateY(-1px);
+}
+
+.quote-dots {
+  display: flex;
+  gap: 7px;
+}
+
+.quote-dots span {
+  background: rgba(7, 129, 113, 0.25);
+  border-radius: 50%;
+  height: 8px;
+  transition: background 0.15s ease;
+  width: 8px;
+}
+
+.quote-dots span.is-active {
+  background: var(--teal-dark);
+}
+
+/* ---------- 8c. FAQ accordion ---------- */
+.faq-section {
+  background: white;
+}
+
+.faq-list {
+  display: grid;
+  gap: 12px;
+  margin: 0 auto;
+  max-width: 760px;
+}
+
+.faq-item {
+  background: var(--wash);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  transition: border-color 0.15s ease;
+}
+
+.faq-item.is-open {
+  background: white;
+  border-color: var(--teal);
+}
+
+.faq-q {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: var(--ink);
+  cursor: pointer;
+  display: flex;
+  font-size: 1rem;
+  font-weight: 700;
+  gap: 14px;
+  justify-content: space-between;
+  padding: 18px 20px;
+  text-align: left;
+  width: 100%;
+}
+
+.faq-q span {
+  color: var(--teal);
+  flex: none;
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.faq-a {
+  color: var(--slate);
+  font-size: 0.95rem;
+  line-height: 1.65;
+  margin: 0;
+  padding: 0 20px 18px;
 }
 
 /* ---------- 9. CTA ---------- */
@@ -1287,6 +1492,97 @@ a:focus-visible {
 
 .tu-foot a:hover {
   text-decoration: underline;
+}
+
+/* Standalone auth pages (forgot / reset / verify) */
+.auth-solo {
+  background: var(--wash);
+  display: grid;
+  min-height: 100vh;
+  padding: 24px;
+  place-items: center;
+}
+
+.auth-solo .tu-form h1 {
+  color: var(--teal-dark);
+  font-family: 'Fraunces', serif;
+  font-size: 26px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.tu-forgot {
+  color: var(--teal);
+  font-weight: 600;
+}
+
+.tu-forgot:hover {
+  text-decoration: underline;
+}
+
+.tu-submit--brand {
+  background: var(--teal);
+  box-shadow: 0 8px 20px rgba(7, 129, 113, 0.25);
+  color: #fff;
+}
+
+.tu-submit--brand:hover:not(:disabled) {
+  background: var(--teal-dark);
+}
+
+.tu-submit--link {
+  display: block;
+  text-align: center;
+}
+
+.tu-submit--ghost {
+  background: transparent;
+  border: 1.5px solid var(--teal);
+  color: var(--teal-dark);
+  margin-top: 18px;
+}
+
+.tu-submit--ghost:hover {
+  background: var(--teal-soft);
+}
+
+.link-btn {
+  background: none;
+  border: 0;
+  color: var(--teal);
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 700;
+  padding: 0;
+}
+
+.link-btn:hover {
+  text-decoration: underline;
+}
+
+.verify-block {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  margin-bottom: 14px;
+  padding: 18px;
+}
+
+.verify-block h2 {
+  font-size: 1.02rem;
+  margin: 0 0 6px;
+}
+
+.verify-block p {
+  color: var(--slate);
+  font-size: 0.92rem;
+  line-height: 1.55;
+  margin: 0 0 12px;
+}
+
+.optional-tag {
+  color: var(--slate);
+  font-size: 0.76rem;
+  font-weight: 500;
 }
 
 /* ---------- 12. Register ---------- */
@@ -2219,8 +2515,12 @@ a:focus-visible {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .why-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .feature-split {
+    grid-template-columns: 1fr;
+  }
+
+  .feature-media img {
+    max-height: 360px;
   }
 
   .steps {
@@ -2313,13 +2613,8 @@ a:focus-visible {
   }
 
   .course-grid,
-  .why-grid,
   .footer-main {
     grid-template-columns: 1fr;
-  }
-
-  .why-card {
-    padding: 26px 22px;
   }
 
   .stats {

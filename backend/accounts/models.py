@@ -3,20 +3,20 @@ from django.db import models
 
 
 class UserManager(BaseUserManager):
-    """Manager for a user model that logs in with email instead of username."""
+    """Manager for a user model that logs in with email or phone."""
 
     use_in_migrations = True
 
     def _create_user(self, email, password, **extra):
-        if not email:
-            raise ValueError("Users must have an email address.")
-        email = self.normalize_email(email)
+        if not email and not extra.get("phone"):
+            raise ValueError("Users must have an email address or phone number.")
+        email = self.normalize_email(email) if email else None
         user = self.model(email=email, **extra)
         user.set_password(password)
         user.save(using=self._db)
         return user
 
-    def create_user(self, email, password=None, **extra):
+    def create_user(self, email=None, password=None, **extra):
         extra.setdefault("is_staff", False)
         extra.setdefault("is_superuser", False)
         return self._create_user(email, password, **extra)
@@ -40,14 +40,17 @@ class User(AbstractUser):
         CONSULTANT = "consultant", "Consultant"
         ADMIN = "admin", "Admin"
 
-    # Drop the username field — email is the login identifier.
+    # Drop the username field — email OR phone is the login identifier.
     username = None
-    email = models.EmailField("email address", unique=True)
+    email = models.EmailField("email address", unique=True, null=True, blank=True)
     full_name = models.CharField(max_length=150, blank=True)
     role = models.CharField(max_length=20, choices=Role.choices, default=Role.STUDENT)
-    phone = models.CharField(max_length=20, blank=True)
+    phone = models.CharField(max_length=20, unique=True, null=True, blank=True)
     # Consultants become verified when an admin approves their application.
     is_verified = models.BooleanField(default=False)
+    # Channel ownership confirmation (email link / SMS OTP).
+    email_verified = models.BooleanField(default=False)
+    phone_verified = models.BooleanField(default=False)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []  # email + password are prompted automatically
@@ -56,6 +59,36 @@ class User(AbstractUser):
 
     def __str__(self):
         return f"{self.email} ({self.role})"
+
+
+class VerificationToken(models.Model):
+    """One-time codes/links: email confirmation, SMS OTP, password reset."""
+
+    class Kind(models.TextChoices):
+        EMAIL = "email", "Email verification"
+        OTP = "otp", "Phone OTP"
+        RESET = "reset", "Password reset"
+        RESET_OTP = "reset_otp", "Password reset OTP"
+
+    user = models.ForeignKey(
+        "accounts.User", on_delete=models.CASCADE, related_name="verification_tokens"
+    )
+    kind = models.CharField(max_length=20, choices=Kind.choices)
+    token = models.CharField(max_length=64, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    used = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def is_valid(self):
+        from django.utils import timezone
+
+        return not self.used and self.expires_at > timezone.now()
+
+    def __str__(self):
+        return f"{self.kind} for {self.user} ({'used' if self.used else 'active'})"
 
 
 def application_upload_path(instance, filename):

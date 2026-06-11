@@ -1,7 +1,9 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
+from django.db.models import Q
 from rest_framework import serializers
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework.exceptions import AuthenticationFailed
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import ConsultantApplication
 
@@ -14,8 +16,17 @@ MAX_DOC_SIZE = 5 * 1024 * 1024  # 5 MB
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["id", "email", "full_name", "role", "phone", "is_verified"]
-        read_only_fields = ["id", "role", "is_verified"]
+        fields = [
+            "id",
+            "email",
+            "full_name",
+            "role",
+            "phone",
+            "is_verified",
+            "email_verified",
+            "phone_verified",
+        ]
+        read_only_fields = ["id", "role", "is_verified", "email_verified", "phone_verified"]
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -25,10 +36,31 @@ class RegisterSerializer(serializers.ModelSerializer):
         choices=[User.Role.STUDENT, User.Role.CONSULTANT],
         default=User.Role.STUDENT,
     )
+    email = serializers.EmailField(required=False, allow_blank=True, allow_null=True)
+    phone = serializers.CharField(required=False, allow_blank=True, max_length=20)
 
     class Meta:
         model = User
         fields = ["id", "email", "full_name", "password", "role", "phone"]
+
+    def validate_email(self, value):
+        value = (value or "").strip().lower() or None
+        if value and User.objects.filter(email__iexact=value).exists():
+            raise serializers.ValidationError("A user with this email already exists.")
+        return value
+
+    def validate_phone(self, value):
+        value = (value or "").strip().replace(" ", "") or None
+        if value and User.objects.filter(phone=value).exists():
+            raise serializers.ValidationError("A user with this phone number already exists.")
+        return value
+
+    def validate(self, attrs):
+        if not attrs.get("email") and not attrs.get("phone"):
+            raise serializers.ValidationError(
+                {"email": "Provide an email address or a phone number."}
+            )
+        return attrs
 
     def create(self, validated_data):
         password = validated_data.pop("password")
@@ -96,6 +128,7 @@ class AdminUserSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "email",
+            "phone",
             "full_name",
             "role",
             "is_verified",
@@ -104,19 +137,45 @@ class AdminUserSerializer(serializers.ModelSerializer):
         ]
 
 
-class LoginSerializer(TokenObtainPairSerializer):
-    """Adds role/name to the JWT claims and returns the user object in the body."""
+def find_user_by_identifier(identifier):
+    """Looks a user up by email (case-insensitive) or phone number."""
+    identifier = (identifier or "").strip()
+    if not identifier:
+        return None
+    return User.objects.filter(
+        Q(email__iexact=identifier) | Q(phone=identifier.replace(" ", ""))
+    ).first()
 
-    username_field = User.USERNAME_FIELD
 
-    @classmethod
-    def get_token(cls, user):
-        token = super().get_token(user)
-        token["role"] = user.role
-        token["full_name"] = user.full_name
-        return token
+def tokens_for_user(user):
+    refresh = RefreshToken.for_user(user)
+    refresh["role"] = user.role
+    refresh["full_name"] = user.full_name
+    return {"refresh": str(refresh), "access": str(refresh.access_token)}
+
+
+class LoginSerializer(serializers.Serializer):
+    """Login with email OR phone + password.
+
+    Accepts the identifier in either `identifier` or `email` (the latter keeps
+    older clients working). Returns {access, refresh, user}.
+    """
+
+    identifier = serializers.CharField(required=False, allow_blank=True)
+    email = serializers.CharField(required=False, allow_blank=True)
+    password = serializers.CharField(write_only=True)
 
     def validate(self, attrs):
-        data = super().validate(attrs)
-        data["user"] = UserSerializer(self.user).data
+        identifier = attrs.get("identifier") or attrs.get("email")
+        user = find_user_by_identifier(identifier)
+        if (
+            user is None
+            or not user.check_password(attrs["password"])
+            or not user.is_active
+        ):
+            raise AuthenticationFailed(
+                "No active account found with the given credentials"
+            )
+        data = tokens_for_user(user)
+        data["user"] = UserSerializer(user).data
         return data

@@ -16,7 +16,7 @@ export default function Login() {
   async function handleSubmit(e) {
     e.preventDefault();
     const next = {};
-    if (!email) next.email = "Please enter your email address.";
+    if (!email) next.email = "Please enter your email or phone number.";
     if (!password) next.password = "Please enter your password.";
     if (Object.keys(next).length) {
       setErrors(next);
@@ -28,7 +28,7 @@ export default function Login() {
       const res = await fetch(`${API_BASE}/auth/login/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ identifier: email.trim(), password }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -39,7 +39,12 @@ export default function Login() {
       localStorage.setItem("tu_refresh", data.refresh);
       localStorage.setItem("tu_user", JSON.stringify(data.user || {}));
       const role = data.user?.role || "student";
-      navigate(PORTAL_ROUTES[role] || "/dashboard");
+      // Unverified consultants go to verification, not the portal.
+      if (role === "consultant" && !data.user?.is_verified) {
+        navigate("/consultant/verify");
+      } else {
+        navigate(PORTAL_ROUTES[role] || "/dashboard");
+      }
     } catch {
       setErrors({ general: "Could not reach the server. Please try again." });
     } finally {
@@ -68,13 +73,13 @@ export default function Login() {
           {errors.general && <div className="tu-err" role="alert">{errors.general}</div>}
 
           <div className={`tu-field${emailInvalid ? " tu-field--error" : ""}`}>
-            <label htmlFor="email">Email Address</label>
+            <label htmlFor="email">Email or Phone Number</label>
             <input
               id="email"
-              type="email"
-              autoComplete="email"
+              type="text"
+              autoComplete="username"
               aria-invalid={emailInvalid}
-              placeholder="e.g. student@tusome.com"
+              placeholder="you@example.com or +2567…"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
@@ -100,7 +105,7 @@ export default function Login() {
 
           <div className="tu-row">
             <label><input type="checkbox" disabled /> Remember me (coming soon)</label>
-            <span className="tu-muted">Forgot password? (coming soon)</span>
+            <Link className="tu-forgot" to="/forgot-password">Forgot password?</Link>
           </div>
 
           <button className="tu-submit" type="submit" disabled={loading}>

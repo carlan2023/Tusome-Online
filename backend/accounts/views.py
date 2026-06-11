@@ -1,11 +1,14 @@
 from django.contrib.auth import get_user_model
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.utils import timezone
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from .models import ConsultantApplication
+from .messaging import send_password_reset, send_verification_email, send_verification_otp
+from .models import ConsultantApplication, VerificationToken
 from .serializers import (
     AdminApplicationSerializer,
     AdminUserSerializer,
@@ -13,6 +16,7 @@ from .serializers import (
     LoginSerializer,
     RegisterSerializer,
     UserSerializer,
+    find_user_by_identifier,
 )
 
 User = get_user_model()
@@ -44,10 +48,18 @@ class IsConsultant(permissions.BasePermission):
 # Auth
 # --------------------------------------------------------------------------
 class RegisterView(generics.CreateAPIView):
-    """POST /api/auth/register/  — open sign-up for students & consultants."""
+    """POST /api/auth/register/  — open sign-up for students & consultants.
+    Sends an email confirmation link and/or a phone OTP after creation."""
     serializer_class = RegisterSerializer
     permission_classes = [permissions.AllowAny]
     throttle_scope = "register"
+
+    def perform_create(self, serializer):
+        user = serializer.save()
+        if user.email:
+            send_verification_email(user)
+        if user.phone:
+            send_verification_otp(user)
 
 
 class LoginView(TokenObtainPairView):
@@ -64,6 +76,134 @@ class MeView(generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         return self.request.user
+
+
+# --------------------------------------------------------------------------
+# Account verification & password recovery
+# --------------------------------------------------------------------------
+class VerifyEmailView(APIView):
+    """POST /api/auth/verify/email/ {token} — confirms email ownership."""
+
+    permission_classes = [permissions.AllowAny]
+    throttle_scope = "auth"
+
+    def post(self, request):
+        token = (request.data.get("token") or "").strip()
+        record = VerificationToken.objects.filter(
+            token=token, kind=VerificationToken.Kind.EMAIL
+        ).first()
+        if not record or not record.is_valid():
+            return Response(
+                {"detail": "This verification link is invalid or has expired."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        record.used = True
+        record.save(update_fields=["used"])
+        record.user.email_verified = True
+        record.user.save(update_fields=["email_verified"])
+        return Response({"detail": "Email verified. Welcome to Tusome!"})
+
+
+class VerifyOtpView(APIView):
+    """POST /api/auth/verify/otp/ {code} — confirms phone ownership (logged in)."""
+
+    permission_classes = [permissions.IsAuthenticated]
+    throttle_scope = "auth"
+
+    def post(self, request):
+        code = (request.data.get("code") or "").strip()
+        record = VerificationToken.objects.filter(
+            user=request.user, token=code, kind=VerificationToken.Kind.OTP
+        ).first()
+        if not record or not record.is_valid():
+            return Response(
+                {"detail": "That code is incorrect or has expired."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        record.used = True
+        record.save(update_fields=["used"])
+        request.user.phone_verified = True
+        request.user.save(update_fields=["phone_verified"])
+        return Response({"detail": "Phone number verified."})
+
+
+class ResendVerificationView(APIView):
+    """POST /api/auth/verify/resend/ {channel: email|phone} (logged in)."""
+
+    permission_classes = [permissions.IsAuthenticated]
+    throttle_scope = "auth"
+
+    def post(self, request):
+        channel = request.data.get("channel")
+        if channel == "email" and request.user.email:
+            send_verification_email(request.user)
+        elif channel == "phone" and request.user.phone:
+            send_verification_otp(request.user)
+        else:
+            return Response(
+                {"detail": "No such channel on your account."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return Response({"detail": "Verification sent."})
+
+
+class ForgotPasswordView(APIView):
+    """POST /api/auth/password/forgot/ {identifier} — email link or SMS OTP.
+    Always returns 200 so attackers can't probe which accounts exist."""
+
+    permission_classes = [permissions.AllowAny]
+    throttle_scope = "auth"
+
+    def post(self, request):
+        identifier = request.data.get("identifier") or request.data.get("email")
+        user = find_user_by_identifier(identifier)
+        if user and user.is_active:
+            send_password_reset(user)
+        return Response(
+            {"detail": "If that account exists, reset instructions have been sent."}
+        )
+
+
+class ResetPasswordView(APIView):
+    """POST /api/auth/password/reset/
+    Either {token, new_password} (email link) or {identifier, code, new_password} (OTP)."""
+
+    permission_classes = [permissions.AllowAny]
+    throttle_scope = "auth"
+
+    def post(self, request):
+        new_password = request.data.get("new_password") or ""
+        record = None
+
+        token = (request.data.get("token") or "").strip()
+        if token:
+            record = VerificationToken.objects.filter(
+                token=token, kind=VerificationToken.Kind.RESET
+            ).first()
+        else:
+            code = (request.data.get("code") or "").strip()
+            user = find_user_by_identifier(request.data.get("identifier"))
+            if user and code:
+                record = VerificationToken.objects.filter(
+                    user=user, token=code, kind=VerificationToken.Kind.RESET_OTP
+                ).first()
+
+        if not record or not record.is_valid():
+            return Response(
+                {"detail": "This reset link or code is invalid or has expired."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            validate_password(new_password, record.user)
+        except DjangoValidationError as exc:
+            return Response({"new_password": exc.messages}, status=status.HTTP_400_BAD_REQUEST)
+
+        record.used = True
+        record.save(update_fields=["used"])
+        record.user.set_password(new_password)
+        record.user.save(update_fields=["password"])
+        return Response({"detail": "Password updated. You can now log in."})
 
 
 # --------------------------------------------------------------------------

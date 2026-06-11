@@ -26,7 +26,7 @@ describe('Given a visitor on the register page', () => {
     await userEvent.click(screen.getByRole('button', { name: /create account/i }))
 
     expect(screen.getByText(/please enter your full name/i)).toBeInTheDocument()
-    expect(screen.getByText(/please enter your email address/i)).toBeInTheDocument()
+    expect(screen.getByText(/provide an email address or a phone number/i)).toBeInTheDocument()
     expect(screen.getByText(/please enter a password/i)).toBeInTheDocument()
     expect(screen.getByText(/please agree to the terms/i)).toBeInTheDocument()
   })

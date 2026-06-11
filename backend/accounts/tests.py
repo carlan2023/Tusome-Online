@@ -412,3 +412,227 @@ class AdminDashboardScenarios(ApiTestCase):
             f"/api/admin/applications/{self.application.pk}/maybe/", **self.auth
         )
         self.assertEqual(response.status_code, 400)
+
+
+# ---------------------------------------------------------------------------
+# Email-or-phone identity, verification & password recovery
+# ---------------------------------------------------------------------------
+from django.core import mail
+
+from .models import VerificationToken
+
+
+class IdentityScenarios(ApiTestCase):
+    """Feature: register and log in with email OR phone."""
+
+    def test_register_with_phone_only_issues_otp(self):
+        """Given only a phone number, when registering, then the account is
+        created and a verification OTP is issued for it."""
+        response = self.client.post(
+            "/api/auth/register/",
+            {"full_name": "Phone User", "phone": "+256700111222",
+             "password": "StrongPass123!", "role": "student"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 201)
+        user = User.objects.get(phone="+256700111222")
+        self.assertIsNone(user.email)
+        otp = VerificationToken.objects.filter(
+            user=user, kind=VerificationToken.Kind.OTP, used=False
+        )
+        self.assertEqual(otp.count(), 1)
+        self.assertEqual(len(otp.first().token), 6)
+
+    def test_register_with_email_sends_verification_link(self):
+        """Given an email, when registering, then a confirmation email with a
+        verification link is sent."""
+        self.client.post("/api/auth/register/", VALID_STUDENT, format="json")
+        user = User.objects.get(email=VALID_STUDENT["email"])
+        token = VerificationToken.objects.get(
+            user=user, kind=VerificationToken.Kind.EMAIL, used=False
+        )
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn(token.token, mail.outbox[0].body)
+        self.assertIn("/verify-account?token=", mail.outbox[0].body)
+
+    def test_register_with_neither_email_nor_phone_fails(self):
+        """Given no contact channel at all, then registration is refused."""
+        response = self.client.post(
+            "/api/auth/register/",
+            {"full_name": "Ghost", "password": "StrongPass123!", "role": "student"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("email", response.data)
+
+    def test_login_with_phone_number_works(self):
+        """Given a phone-registered user, when logging in with the phone as
+        identifier, then tokens are returned."""
+        User.objects.create_user(
+            phone="+256700111222", password="StrongPass123!", full_name="Phone User"
+        )
+        response = self.client.post(
+            "/api/auth/login/",
+            {"identifier": "+256700111222", "password": "StrongPass123!"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("access", response.data)
+        self.assertEqual(response.data["user"]["phone"], "+256700111222")
+
+    def test_duplicate_phone_is_rejected(self):
+        """Given a phone already registered, then a second registration with
+        the same phone fails with a field error."""
+        User.objects.create_user(phone="+256700111222", password="StrongPass123!")
+        response = self.client.post(
+            "/api/auth/register/",
+            {"full_name": "Copy Cat", "phone": "+256700111222",
+             "password": "StrongPass123!", "role": "student"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("phone", response.data)
+
+
+class VerificationScenarios(ApiTestCase):
+    """Feature: confirming ownership of email / phone."""
+
+    def test_email_link_verifies_the_address(self):
+        """Given the emailed token, when posted back, then the account's
+        email is marked verified and the token can't be reused."""
+        self.client.post("/api/auth/register/", VALID_STUDENT, format="json")
+        user = User.objects.get(email=VALID_STUDENT["email"])
+        token = VerificationToken.objects.get(user=user, kind="email").token
+
+        first = self.client.post("/api/auth/verify/email/", {"token": token}, format="json")
+        self.assertEqual(first.status_code, 200)
+        user.refresh_from_db()
+        self.assertTrue(user.email_verified)
+
+        again = self.client.post("/api/auth/verify/email/", {"token": token}, format="json")
+        self.assertEqual(again.status_code, 400)
+
+    def test_otp_verifies_the_phone(self):
+        """Given the SMS code, when the logged-in user submits it,
+        then the phone is marked verified; a wrong code is rejected."""
+        user = User.objects.create_user(
+            phone="+256700111222", password="StrongPass123!"
+        )
+        from .messaging import send_verification_otp
+        code = send_verification_otp(user).token
+        auth = {"HTTP_AUTHORIZATION": f"Bearer {AccessToken.for_user(user)}"}
+
+        wrong = self.client.post("/api/auth/verify/otp/", {"code": "000000"}, format="json", **auth)
+        self.assertEqual(wrong.status_code, 400)
+
+        right = self.client.post("/api/auth/verify/otp/", {"code": code}, format="json", **auth)
+        self.assertEqual(right.status_code, 200)
+        user.refresh_from_db()
+        self.assertTrue(user.phone_verified)
+
+    def test_resend_requires_a_valid_channel(self):
+        """Given a phone-only account, when resending to email, then 400;
+        when resending to phone, then a fresh OTP replaces the old one."""
+        user = User.objects.create_user(phone="+256700111222", password="StrongPass123!")
+        auth = {"HTTP_AUTHORIZATION": f"Bearer {AccessToken.for_user(user)}"}
+
+        bad = self.client.post("/api/auth/verify/resend/", {"channel": "email"}, format="json", **auth)
+        self.assertEqual(bad.status_code, 400)
+
+        ok = self.client.post("/api/auth/verify/resend/", {"channel": "phone"}, format="json", **auth)
+        self.assertEqual(ok.status_code, 200)
+        self.assertEqual(
+            VerificationToken.objects.filter(user=user, kind="otp", used=False).count(), 1
+        )
+
+
+class PasswordRecoveryScenarios(ApiTestCase):
+    """Feature: users can recover a forgotten password."""
+
+    def test_forgot_with_email_sends_reset_link(self):
+        """Given an email account, when requesting a reset, then a reset link
+        is emailed and the response stays generic."""
+        user = User.objects.create_user(
+            email="p@t.com", password="OldPass123!", full_name="Phil"
+        )
+        response = self.client.post(
+            "/api/auth/password/forgot/", {"identifier": "p@t.com"}, format="json"
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertTrue(
+            VerificationToken.objects.filter(user=user, kind="reset", used=False).exists()
+        )
+
+    def test_forgot_with_unknown_identifier_is_still_200(self):
+        """Given an unknown identifier, then the response is identical
+        (no account enumeration) and nothing is sent."""
+        response = self.client.post(
+            "/api/auth/password/forgot/", {"identifier": "ghost@nowhere.com"}, format="json"
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_reset_with_emailed_token_changes_password(self):
+        """Given a valid reset token, when submitting a new password,
+        then login works with the new one and the token is spent."""
+        user = User.objects.create_user(email="p@t.com", password="OldPass123!")
+        self.client.post("/api/auth/password/forgot/", {"identifier": "p@t.com"}, format="json")
+        token = VerificationToken.objects.get(user=user, kind="reset").token
+
+        response = self.client.post(
+            "/api/auth/password/reset/",
+            {"token": token, "new_password": "BrandNewPass456!"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200)
+
+        login = self.client.post(
+            "/api/auth/login/",
+            {"identifier": "p@t.com", "password": "BrandNewPass456!"},
+            format="json",
+        )
+        self.assertEqual(login.status_code, 200)
+
+        reuse = self.client.post(
+            "/api/auth/password/reset/",
+            {"token": token, "new_password": "AnotherPass789!"},
+            format="json",
+        )
+        self.assertEqual(reuse.status_code, 400)
+
+    def test_phone_only_user_resets_with_otp(self):
+        """Given a phone-only account, when requesting a reset, then an OTP is
+        issued and resets the password together with the identifier."""
+        user = User.objects.create_user(phone="+256700111222", password="OldPass123!")
+        self.client.post(
+            "/api/auth/password/forgot/", {"identifier": "+256700111222"}, format="json"
+        )
+        code = VerificationToken.objects.get(user=user, kind="reset_otp").token
+
+        response = self.client.post(
+            "/api/auth/password/reset/",
+            {"identifier": "+256700111222", "code": code, "new_password": "BrandNewPass456!"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200)
+
+        login = self.client.post(
+            "/api/auth/login/",
+            {"identifier": "+256700111222", "password": "BrandNewPass456!"},
+            format="json",
+        )
+        self.assertEqual(login.status_code, 200)
+
+    def test_weak_new_password_is_rejected(self):
+        """Given a valid token but a weak new password, then validation fails
+        and the old password keeps working."""
+        user = User.objects.create_user(email="p@t.com", password="OldPass123!")
+        self.client.post("/api/auth/password/forgot/", {"identifier": "p@t.com"}, format="json")
+        token = VerificationToken.objects.get(user=user, kind="reset").token
+
+        response = self.client.post(
+            "/api/auth/password/reset/", {"token": token, "new_password": "123"}, format="json"
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("new_password", response.data)

@@ -1,13 +1,23 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import cartIcon from '../assets/cart.svg'
 import logo from '../assets/logo.jpeg'
+import welcomeImg from '../assets/welcome.jpg'
+import skillsImg from '../assets/skills.jpg'
+import readingImg from '../assets/Reading.jpg'
+import booksImg from '../assets/boooks.jpg'
+import mubsImg from '../assets/Mubs.jpg'
+import glowImg from '../assets/Glow.jpg'
+import menImg from '../assets/Men.jpg'
+import juliaImg from '../assets/Julia.jpg'
+import ladyImg from '../assets/Ugandan Lady.jpg'
+import greenShirtImg from '../assets/Green shirt.jpg'
 import Footer from './footer'
 
-const courses = [
+const COURSES = [
   {
     title: 'Advanced Data Science & ML',
-    image:
-      'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&w=900&q=85',
+    image: readingImg,
     tag: 'Data Science',
     rating: '4.8',
     reviews: '2.4k reviews',
@@ -16,9 +26,8 @@ const courses = [
   },
   {
     title: 'Generative AI Foundations',
-    image:
-      'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&fit=crop&w=900&q=85',
-    tag: 'Artificial Intelligence',
+    image: glowImg,
+    tag: 'AI',
     rating: '4.9',
     reviews: '1.8k reviews',
     description: 'Explore the world of LLMs, Prompt Engineering, and building AI-powered applications.',
@@ -26,17 +35,99 @@ const courses = [
   },
   {
     title: 'Full-Stack Web Development',
-    image:
-      'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=900&q=85',
+    image: skillsImg,
     tag: 'Development',
     rating: '4.7',
     reviews: '3.1k reviews',
     description: 'Build responsive, scalable web applications using React, Node.js, and modern CSS frameworks.',
     price: '$75.50',
   },
+  {
+    title: 'Business Analytics Pro',
+    image: booksImg,
+    tag: 'Business',
+    rating: '4.6',
+    reviews: '980 reviews',
+    description: 'Turn raw numbers into boardroom decisions with Excel, SQL, and storytelling dashboards.',
+    price: '$69.00',
+  },
+  {
+    title: 'Mobile App Development',
+    image: menImg,
+    tag: 'Development',
+    rating: '4.7',
+    reviews: '1.2k reviews',
+    description: 'Ship cross-platform Android & iOS apps with React Native, from idea to app store.',
+    price: '$82.00',
+  },
+  {
+    title: 'Digital Marketing Mastery',
+    image: mubsImg,
+    tag: 'Business',
+    rating: '4.5',
+    reviews: '1.6k reviews',
+    description: 'Grow brands with SEO, social campaigns, and analytics that prove what works.',
+    price: '$59.99',
+  },
+]
+
+const CATEGORIES = ['All', 'Data Science', 'AI', 'Development', 'Business']
+
+const TESTIMONIALS = [
+  {
+    name: 'Julia Nankya',
+    role: 'Data Analyst, Kampala',
+    photo: juliaImg,
+    quote:
+      'Tusome took me from spreadsheets to machine learning in eight months. The mentors reply like friends, not robots — I landed my analyst role before finishing the course.',
+  },
+  {
+    name: 'Amina Achen',
+    role: 'Software Developer',
+    photo: ladyImg,
+    quote:
+      "The full-stack track is the most practical course I've taken anywhere. Real projects, real code reviews, and a certificate employers actually recognized.",
+  },
+  {
+    name: 'David Okello',
+    role: 'Business Consultant',
+    photo: greenShirtImg,
+    quote:
+      'I teach on Tusome and learn on it too. The verification process gives students confidence, and the community keeps every course honest.',
+  },
+]
+
+const FAQS = [
+  {
+    q: 'How do I become a verified consultant?',
+    a: 'Register as a consultant, upload your government ID, academic certificate, and a professional reference. Our team reviews applications within one business day — once approved, your consultant tools unlock.',
+  },
+  {
+    q: 'Can I learn on my phone?',
+    a: 'Yes. Every course, quiz, and live session works on mobile browsers, and you can register and log in with just a phone number — no email required.',
+  },
+  {
+    q: 'Are the certificates recognized?',
+    a: 'Tusome certificates carry verified instructor credentials and are recognized by a growing network of employers across East Africa and beyond.',
+  },
+  {
+    q: 'What if I forget my password?',
+    a: 'Use "Forgot password" on the login page — we send a reset link to your email or a 6-digit code to your phone, whichever you registered with.',
+  },
 ]
 
 function LandingPage() {
+  const [category, setCategory] = useState('All')
+  const [slide, setSlide] = useState(0)
+  const [openFaq, setOpenFaq] = useState(0)
+
+  const visibleCourses =
+    category === 'All' ? COURSES.slice(0, 3) : COURSES.filter((c) => c.tag === category)
+
+  const prev = () => setSlide((s) => (s - 1 + TESTIMONIALS.length) % TESTIMONIALS.length)
+  const next = () => setSlide((s) => (s + 1) % TESTIMONIALS.length)
+  const t = TESTIMONIALS[slide]
+
   return (
     <main className="landing-page">
       <div className="page-sheet">
@@ -52,7 +143,8 @@ function LandingPage() {
             </label>
             <a href="#courses">Courses</a>
             <a href="#features">Why Tusome</a>
-            <a href="#how">How it Works</a>
+            <a href="#testimonials">Stories</a>
+            <a href="#faq">FAQ</a>
           </nav>
           <div className="header-actions">
             <Link className="login-link" to="/login">
@@ -126,15 +218,24 @@ function LandingPage() {
                 hands-on projects, and flexible online lessons.
               </p>
             </div>
-            <div className="section-heading">
-              <div>
-                <span>Most-enrolled specializations</span>
-                <p>Start your journey with our highest-rated programs.</p>
-              </div>
-              <a href="#courses">Explore all courses ›</a>
+
+            <div className="filter-row" role="tablist" aria-label="Course categories">
+              {CATEGORIES.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  role="tab"
+                  aria-selected={category === c}
+                  className={`filter-chip${category === c ? ' is-active' : ''}`}
+                  onClick={() => setCategory(c)}
+                >
+                  {c}
+                </button>
+              ))}
             </div>
+
             <div className="course-grid">
-              {courses.map((course) => (
+              {visibleCourses.map((course) => (
                 <article className="course-card" key={course.title}>
                   <div className="course-image">
                     <img src={course.image} alt="" loading="lazy" />
@@ -161,51 +262,71 @@ function LandingPage() {
 
         <section id="features">
           <div className="section">
+            <div className="feature-split">
+              <div className="feature-media">
+                <img src={welcomeImg} alt="A Tusome student studying online" loading="lazy" />
+              </div>
+              <div className="feature-copy">
+                <span className="kicker">Why Tusome</span>
+                <h2>Everything you need to learn with confidence</h2>
+                <ul className="feature-list">
+                  <li>
+                    <span className="why-icon chip-blue" aria-hidden="true">✦</span>
+                    <div>
+                      <h3>Expert Instructors</h3>
+                      <p>Verified industry leaders bring real-world experience to your classroom.</p>
+                    </div>
+                  </li>
+                  <li>
+                    <span className="why-icon chip-orange" aria-hidden="true">◷</span>
+                    <div>
+                      <h3>Flexible Learning</h3>
+                      <p>Study at your own pace, on any device, around your life.</p>
+                    </div>
+                  </li>
+                  <li>
+                    <span className="why-icon chip-teal" aria-hidden="true">▣</span>
+                    <div>
+                      <h3>Recognized Certificates</h3>
+                      <p>Earn credentials valued by top employers across the region.</p>
+                    </div>
+                  </li>
+                  <li>
+                    <span className="why-icon chip-violet" aria-hidden="true">⚭</span>
+                    <div>
+                      <h3>Global Community</h3>
+                      <p>Collaborate on projects and grow your network worldwide.</p>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="testimonials" id="testimonials">
+          <div className="section">
             <div className="section-head">
-              <span className="kicker">Why Tusome</span>
-              <h2>Everything you need to learn with confidence</h2>
-              <p>
-                Stay supported, motivated, and confident as you build real skills
-                for your next opportunity.
-              </p>
+              <span className="kicker">Learner Stories</span>
+              <h2>People like you, futures like yours</h2>
             </div>
-            <div className="why-grid">
-              <article className="why-card">
-                <span className="why-icon chip-blue" aria-hidden="true">✦</span>
-                <h3>Expert Instructors</h3>
-                <p>
-                  Learn from industry leaders and academic scholars who bring
-                  real-world experience to your classroom.
-                </p>
-              </article>
-
-              <article className="why-card">
-                <span className="why-icon chip-orange" aria-hidden="true">◷</span>
-                <h3>Flexible Learning</h3>
-                <p>
-                  Study at your own pace, on any device, and balance your
-                  education with your personal life.
-                </p>
-              </article>
-
-              <article className="why-card">
-                <span className="why-icon chip-teal" aria-hidden="true">▣</span>
-                <h3>Recognized Certificates</h3>
-                <p>
-                  Earn credentials that are valued by top employers and
-                  recognized across the industry.
-                </p>
-              </article>
-
-              <article className="why-card">
-                <span className="why-icon chip-violet" aria-hidden="true">⚭</span>
-                <h3>Global Community</h3>
-                <p>
-                  Join thousands of learners. Collaborate on projects, join
-                  forums, and grow your network globally.
-                </p>
-              </article>
-            </div>
+            <figure className="quote-card">
+              <img className="quote-photo" src={t.photo} alt={t.name} />
+              <blockquote>“{t.quote}”</blockquote>
+              <figcaption>
+                <strong>{t.name}</strong>
+                <span>{t.role}</span>
+              </figcaption>
+              <div className="quote-nav">
+                <button type="button" onClick={prev} aria-label="Previous story">←</button>
+                <div className="quote-dots" aria-hidden="true">
+                  {TESTIMONIALS.map((_, i) => (
+                    <span key={i} className={i === slide ? 'is-active' : ''} />
+                  ))}
+                </div>
+                <button type="button" onClick={next} aria-label="Next story">→</button>
+              </div>
+            </figure>
           </div>
         </section>
 
@@ -219,18 +340,43 @@ function LandingPage() {
               <article>
                 <span>01</span>
                 <h3>Create Account</h3>
-                <p>Sign up in seconds and choose your learning path based on your goals.</p>
+                <p>Sign up with your email or phone number in seconds.</p>
               </article>
               <article>
                 <span>02</span>
                 <h3>Start Learning</h3>
-                <p>Access your dashboard, pick a course, and start your first lesson immediately.</p>
+                <p>Pick a course and start your first lesson immediately.</p>
               </article>
               <article>
                 <span>03</span>
                 <h3>Get Certified</h3>
-                <p>Complete your modules and projects to earn your industry-recognized certification.</p>
+                <p>Complete your projects and earn a recognized certificate.</p>
               </article>
+            </div>
+          </div>
+        </section>
+
+        <section className="faq-section" id="faq">
+          <div className="section">
+            <div className="section-head">
+              <span className="kicker">FAQ</span>
+              <h2>Questions, answered</h2>
+            </div>
+            <div className="faq-list">
+              {FAQS.map((item, i) => (
+                <div className={`faq-item${openFaq === i ? ' is-open' : ''}`} key={item.q}>
+                  <button
+                    type="button"
+                    className="faq-q"
+                    aria-expanded={openFaq === i}
+                    onClick={() => setOpenFaq(openFaq === i ? -1 : i)}
+                  >
+                    {item.q}
+                    <span aria-hidden="true">{openFaq === i ? '−' : '+'}</span>
+                  </button>
+                  {openFaq === i && <p className="faq-a">{item.a}</p>}
+                </div>
+              ))}
             </div>
           </div>
         </section>
@@ -255,4 +401,3 @@ function LandingPage() {
 }
 
 export default LandingPage
-

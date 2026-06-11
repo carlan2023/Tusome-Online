@@ -28,9 +28,9 @@ describe('Given a visitor on the login page', () => {
     renderLogin()
     await userEvent.click(screen.getByRole('button', { name: /log in/i }))
 
-    expect(screen.getByText(/please enter your email address/i)).toBeInTheDocument()
+    expect(screen.getByText(/please enter your email or phone number/i)).toBeInTheDocument()
     expect(screen.getByText(/please enter your password/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/email address/i)).toHaveAttribute('aria-invalid', 'true')
+    expect(screen.getByLabelText(/email or phone/i)).toHaveAttribute('aria-invalid', 'true')
     expect(screen.getByLabelText(/password/i)).toHaveAttribute('aria-invalid', 'true')
   })
 
@@ -41,12 +41,12 @@ describe('Given a visitor on the login page', () => {
     }))
     renderLogin()
 
-    await userEvent.type(screen.getByLabelText(/email address/i), 'p@t.com')
+    await userEvent.type(screen.getByLabelText(/email or phone/i), 'p@t.com')
     await userEvent.type(screen.getByLabelText(/password/i), 'wrongpass')
     await userEvent.click(screen.getByRole('button', { name: /log in/i }))
 
     expect(await screen.findByText(/no active account/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/email address/i)).toHaveAttribute('aria-invalid', 'true')
+    expect(screen.getByLabelText(/email or phone/i)).toHaveAttribute('aria-invalid', 'true')
     expect(screen.getByLabelText(/password/i)).toHaveAttribute('aria-invalid', 'true')
   })
 
@@ -61,7 +61,7 @@ describe('Given a visitor on the login page', () => {
     }))
     renderLogin()
 
-    await userEvent.type(screen.getByLabelText(/email address/i), 'p@t.com')
+    await userEvent.type(screen.getByLabelText(/email or phone/i), 'p@t.com')
     await userEvent.type(screen.getByLabelText(/password/i), 'GoodPass123!')
     await userEvent.click(screen.getByRole('button', { name: /log in/i }))
 
@@ -76,7 +76,7 @@ describe('Given a visitor on the login page', () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('network down')))
     renderLogin()
 
-    await userEvent.type(screen.getByLabelText(/email address/i), 'p@t.com')
+    await userEvent.type(screen.getByLabelText(/email or phone/i), 'p@t.com')
     await userEvent.type(screen.getByLabelText(/password/i), 'GoodPass123!')
     await userEvent.click(screen.getByRole('button', { name: /log in/i }))
 

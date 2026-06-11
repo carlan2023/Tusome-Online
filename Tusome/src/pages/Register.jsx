@@ -1,18 +1,19 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { API_BASE, PORTAL_ROUTES } from '../config/api'
+import { API_BASE } from '../config/api'
 import Footer from './footer'
 
 function RegisterPage() {
   const navigate = useNavigate()
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
+  const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
   const [role, setRole] = useState('student')
   const [agreed, setAgreed] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
-  // { fullName, email, password, terms, general }
+  // { fullName, email, phone, password, terms, general }
   const [errors, setErrors] = useState({})
 
   function fieldClass(key) {
@@ -23,6 +24,7 @@ function RegisterPage() {
     const next = {}
     if (data?.full_name) next.fullName = [].concat(data.full_name)[0]
     if (data?.email) next.email = [].concat(data.email)[0]
+    if (data?.phone) next.phone = [].concat(data.phone)[0]
     if (data?.password) next.password = [].concat(data.password)[0]
     if (!Object.keys(next).length) {
       next.general =
@@ -37,7 +39,9 @@ function RegisterPage() {
     e.preventDefault()
     const next = {}
     if (!fullName.trim()) next.fullName = 'Please enter your full name.'
-    if (!email) next.email = 'Please enter your email address.'
+    if (!email.trim() && !phone.trim()) {
+      next.email = 'Provide an email address or a phone number (at least one).'
+    }
     if (!password) next.password = 'Please enter a password.'
     else if (password.length < 8) next.password = 'Password must be at least 8 characters.'
     if (!agreed) next.terms = 'Please agree to the Terms of Service and Privacy Policy.'
@@ -48,10 +52,13 @@ function RegisterPage() {
     setErrors({})
     setLoading(true)
     try {
+      const payload = { full_name: fullName.trim(), password, role }
+      if (email.trim()) payload.email = email.trim()
+      if (phone.trim()) payload.phone = phone.trim()
       const res = await fetch(`${API_BASE}/auth/register/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ full_name: fullName.trim(), email, password, role }),
+        body: JSON.stringify(payload),
       })
       const data = await res.json()
       if (!res.ok) {
@@ -63,7 +70,7 @@ function RegisterPage() {
       const loginRes = await fetch(`${API_BASE}/auth/login/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ identifier: email.trim() || phone.trim(), password }),
       })
       const loginData = await loginRes.json()
       if (!loginRes.ok) {
@@ -73,8 +80,9 @@ function RegisterPage() {
       localStorage.setItem('tu_access', loginData.access)
       localStorage.setItem('tu_refresh', loginData.refresh)
       localStorage.setItem('tu_user', JSON.stringify(loginData.user || {}))
-      const userRole = loginData.user?.role || 'student'
-      navigate(PORTAL_ROUTES[userRole] || '/dashboard')
+      // Everyone confirms their email/phone first; consultants then continue
+      // to document verification from there.
+      navigate('/verify-account')
     } catch {
       setErrors({ general: 'Could not reach the server. Please try again.' })
     } finally {
@@ -144,7 +152,7 @@ function RegisterPage() {
             </label>
 
             <label>
-              Email Address
+              Email Address <span className="optional-tag">(optional if you add a phone)</span>
               <input
                 type="email"
                 autoComplete="email"
@@ -155,6 +163,20 @@ function RegisterPage() {
                 onChange={(e) => setEmail(e.target.value)}
               />
               {errors.email && <span className="field-msg" role="alert">{errors.email}</span>}
+            </label>
+
+            <label>
+              Phone Number <span className="optional-tag">(optional if you add an email)</span>
+              <input
+                type="tel"
+                autoComplete="tel"
+                className={fieldClass('phone')}
+                aria-invalid={Boolean(errors.phone)}
+                placeholder="+256 7XX XXX XXX"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+              />
+              {errors.phone && <span className="field-msg" role="alert">{errors.phone}</span>}
             </label>
 
             <label>

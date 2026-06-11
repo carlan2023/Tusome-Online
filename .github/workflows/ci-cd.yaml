@@ -95,12 +95,43 @@ jobs:
         run: python manage.py test --verbosity=2
 
   # ---------------------------------------------------------------------------
-  # DEPLOYMENT: handled by DigitalOcean App Platform's Autodeploy — every push
-  # to main that passes review deploys automatically. If you later want CI-gated
-  # deploys instead (deploy only when tests pass), turn Autodeploy OFF in DO and
-  # re-add a doctl job here with DIGITALOCEAN_ACCESS_TOKEN + APP_ID secrets.
+  # DEPLOY: CI-gated — runs only on pushes to main AND only after both test
+  # jobs pass. Requires two GitHub repo secrets:
+  #   DIGITALOCEAN_ACCESS_TOKEN  (DO API token with App write scope)
+  #   DIGITALOCEAN_APP_ID        (from doctl apps list, or the app's URL)
+  # Until those secrets exist the job skips gracefully and stays green.
+  # IMPORTANT: turn OFF Autodeploy in the DO app once secrets are set,
+  # otherwise every push deploys twice.
   #
   # E2E (Cypress/Playwright) intentionally omitted until specs exist — an empty
   # E2E job would fail every push. Behaviour coverage currently lives in the
   # Vitest specs (frontend) and the Django scenario tests (backend).
   # ---------------------------------------------------------------------------
+  deploy:
+    name: Deploy to DigitalOcean
+    needs: [ frontend, backend ]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    env:
+      DO_TOKEN: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+      DO_APP_ID: ${{ secrets.DIGITALOCEAN_APP_ID }}
+    steps:
+      - name: Check deploy credentials
+        id: creds
+        run: |
+          if [ -z "$DO_TOKEN" ] || [ -z "$DO_APP_ID" ]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Deploy skipped — set DIGITALOCEAN_ACCESS_TOKEN and DIGITALOCEAN_APP_ID repo secrets to enable CI-gated deploys."
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install doctl
+        if: steps.creds.outputs.configured == 'true'
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: Trigger App Platform deployment
+        if: steps.creds.outputs.configured == 'true'
+        run: doctl apps create-deployment "$DO_APP_ID" --wait

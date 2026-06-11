@@ -22,10 +22,18 @@ export default function Portal({ role }) {
     } else if (user.role !== role) {
       navigate(PORTAL_ROUTES[user.role] || "/dashboard", { replace: true });
     } else if (role === "consultant") {
+      // The consultant portal is gated: only approved consultants may enter.
       authFetch("/consultant/application/")
         .then((res) => (res.ok ? res.json() : { status: "none" }))
-        .then((data) => setVerifyStatus(data.status || "none"))
-        .catch(() => setVerifyStatus("none"));
+        .then((data) => {
+          const appStatus = data.status || "none";
+          if (appStatus !== "approved") {
+            navigate("/consultant/verify", { replace: true });
+          } else {
+            setVerifyStatus(appStatus);
+          }
+        })
+        .catch(() => navigate("/consultant/verify", { replace: true }));
     }
   }, [user, role, navigate]);
 
@@ -35,6 +43,8 @@ export default function Portal({ role }) {
   }
 
   if (!user?.email || wrongPortal) return null;
+  // Consultants see nothing until their approval is confirmed.
+  if (role === "consultant" && verifyStatus !== "approved") return null;
 
   return (
     <div className="tu-portal">
