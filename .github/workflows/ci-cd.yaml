@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   # ---------------------------------------------------------------------------
-  # FRONTEND: lint, unit tests (TDD), and production build (Vite + React)
+  # FRONTEND: lint, unit/behaviour tests (Vitest + Testing Library), and build.
   # Lives in ./Tusome, so every step runs from that directory.
   # ---------------------------------------------------------------------------
   frontend:
@@ -29,7 +29,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
           cache-dependency-path: Tusome/package-lock.json
 
@@ -39,10 +39,8 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      # `--if-present` means this passes (skips) until you add a "test" script
-      # to package.json (e.g. Vitest), then it runs automatically.
-      - name: Unit tests (TDD)
-        run: npm test --if-present
+      - name: Unit & behaviour tests (Vitest)
+        run: npm test
 
       - name: Build
         run: npm run build
@@ -55,8 +53,10 @@ jobs:
           retention-days: 7
 
   # ---------------------------------------------------------------------------
-  # BACKEND: Django system checks, migration smoke test, and unit tests.
-  # Lives in ./backend.
+  # BACKEND: Django system checks, migration smoke test, and the BDD-style
+  # API test suite. Lives in ./backend.
+  # CI needs DEBUG=True + a throwaway SECRET_KEY because production settings
+  # refuse to start without a real key and a Postgres DATABASE_URL.
   # ---------------------------------------------------------------------------
   backend:
     name: Backend - Django Checks & Tests
@@ -64,6 +64,9 @@ jobs:
     defaults:
       run:
         working-directory: backend
+    env:
+      DEBUG: "True"
+      SECRET_KEY: ci-only-not-a-real-secret
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -71,73 +74,33 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: '3.13'
           cache: 'pip'
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then
-            pip install -r requirements.txt
-          else
-            pip install "Django>=6.0,<6.1"
-          fi
+          pip install -r requirements.txt
 
       - name: Django system checks
         run: python manage.py check
 
+      - name: Migrations are complete (no model drift)
+        run: python manage.py makemigrations --check --dry-run
+
       - name: Migrations smoke test
         run: python manage.py migrate --noinput
 
-      - name: Unit tests
-        run: python manage.py test
+      - name: API tests (BDD scenarios)
+        run: python manage.py test --verbosity=2
 
   # ---------------------------------------------------------------------------
-  # E2E (BDD): build the frontend, serve it, and run Cypress against it.
-  # Requires Cypress specs in Tusome/ — until you add them this job will fail,
-  # so wire up cypress before relying on it as a deploy gate.
+  # DEPLOYMENT: handled by DigitalOcean App Platform's Autodeploy — every push
+  # to main that passes review deploys automatically. If you later want CI-gated
+  # deploys instead (deploy only when tests pass), turn Autodeploy OFF in DO and
+  # re-add a doctl job here with DIGITALOCEAN_ACCESS_TOKEN + APP_ID secrets.
+  #
+  # E2E (Cypress/Playwright) intentionally omitted until specs exist — an empty
+  # E2E job would fail every push. Behaviour coverage currently lives in the
+  # Vitest specs (frontend) and the Django scenario tests (backend).
   # ---------------------------------------------------------------------------
-  e2e:
-    name: E2E Tests (BDD)
-    needs: [ frontend, backend ]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
-          cache-dependency-path: Tusome/package-lock.json
-
-      - name: Run Cypress
-        uses: cypress-io/github-action@v6
-        with:
-          working-directory: Tusome
-          build: npm run build
-          start: npm run preview
-          wait-on: 'http://localhost:4173'   # Vite preview default port
-          wait-on-timeout: 120
-
-  # ---------------------------------------------------------------------------
-  # DEPLOY: only on a push to main, and only after everything above is green.
-  # Targets DigitalOcean App Platform via doctl.
-  # ---------------------------------------------------------------------------
-  deploy:
-    name: Deploy to DigitalOcean
-    needs: [ frontend, backend, e2e ]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Install doctl
-        uses: digitalocean/action-doctl@v2
-        with:
-          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
-
-      - name: Trigger App Platform deployment
-        run: doctl apps create-deployment ${{ secrets.DIGITALOCEAN_APP_ID }} --wait

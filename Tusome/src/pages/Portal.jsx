@@ -4,27 +4,24 @@ import { clearAuth, getStoredUser, PORTAL_LABELS, PORTAL_ROUTES } from "../confi
 
 export default function Portal({ role }) {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
+  // Lazy initializer: read once on mount, no setState-in-effect needed.
+  const [user] = useState(getStoredUser);
+  const wrongPortal = user?.email && user.role !== role;
 
   useEffect(() => {
-    const stored = getStoredUser();
-    if (!stored?.email) {
+    if (!user?.email) {
       navigate("/login", { replace: true });
-      return;
+    } else if (user.role !== role) {
+      navigate(PORTAL_ROUTES[user.role] || "/dashboard", { replace: true });
     }
-    if (stored.role !== role) {
-      navigate(PORTAL_ROUTES[stored.role] || "/dashboard", { replace: true });
-      return;
-    }
-    setUser(stored);
-  }, [role, navigate]);
+  }, [user, role, navigate]);
 
   function handleLogout() {
     clearAuth();
     navigate("/login", { replace: true });
   }
 
-  if (!user) return null;
+  if (!user?.email || wrongPortal) return null;
 
   return (
     <div className="tu-portal">
