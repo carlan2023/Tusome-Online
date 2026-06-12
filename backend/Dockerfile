@@ -23,5 +23,5 @@ RUN DEBUG=True SECRET_KEY=dummy-build-key python manage.py collectstatic --noinp
 # Expose port
 EXPOSE 8000
 
-# Run the app
-CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000"]
+# Run the app (worker-tmp-dir in RAM avoids false worker timeouts in containers)
+CMD ["gunicorn", "config.wsgi:application", "--worker-tmp-dir", "/dev/shm", "--bind", "0.0.0.0:8000"]
